@@ -223,6 +223,12 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
             _droneGrenList set [_grenClass, _info];
         };
         MEMBER_GLOBAL("DroneGrenList", _droneGrenList);
+        
+        PR _tempGren = SELF_VAR("TempAttachedGren");
+        PR _grenAmount = MEMBER("getGrenAmount", _grenClass);
+        if (((typeOf _tempGren) isEqualTo _grenClass) && (_grenAmount == 0)) then {
+            MEMBER("DeleteAttachedGren", nil);
+        };
     };
 
     PUBLIC FUNCTION("string", "Drop") {
@@ -260,12 +266,6 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
         _drone setVariable ["DGM_tempGren", _gren, true];
 
         MEMBER_GLOBAL("TempDropGren", _gren);
-
-        PR _tempGren = SELF_VAR("TempAttachedGren");
-        PR _grenAmount = MEMBER("getGrenAmount", _item);
-        if (((typeOf _tempGren) isEqualTo _item) && (_grenAmount == 0)) then {
-            MEMBER("DeleteAttachedGren", nil);
-        };
 
         _gren
     }; 

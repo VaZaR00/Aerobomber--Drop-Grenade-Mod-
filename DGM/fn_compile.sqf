@@ -27,7 +27,7 @@ FUNC(detachGrenEvent) = {
 	if (_caller == player) then {
 		_caller addItem _grenClass;
 	};
-	METHOD(_menuInst, "removeActions", _grenClass);
+	METHOD(_menuInst, "removeGrenActions", _grenClass);
 };
 FUNC(dropGrenEvent) = {
 	params["_drone", "_grenClass", ["_caller", player, [player]]];
@@ -41,5 +41,5 @@ FUNC(dropGrenEvent) = {
 	if (_caller == player) then {
 		METHOD(_deviceInst, "Drop", _grenClass);
 	};
-	METHOD(_menuInst, "removeActions", _grenClass);
+	METHOD(_menuInst, "removeGrenActions", _grenClass);
 };

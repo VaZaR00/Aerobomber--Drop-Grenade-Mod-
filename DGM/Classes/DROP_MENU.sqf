@@ -7,8 +7,10 @@
 CLASS("OO_DROP_MENU") // IOO_DROP_MENU
 
     PUBLIC VARIABLE("object", "Drone");              // дрон
-    PUBLIC VARIABLE("hashmap", "Actions");
-    PRIVATE VARIABLE("hashmap", "AllActions");
+    PUBLIC VARIABLE("hashmap", "Actions"); // grenclass : [attach, detach, drop]
+    PUBLIC VARIABLE("scalar", "MainAction"); // Menu action
+    PUBLIC VARIABLE("scalar", "CloseAction"); // Close Menu action
+    PRIVATE VARIABLE("array", "AllActions");
 
     // Конструктор
     PUBLIC FUNCTION("array", "constructor") {
@@ -33,7 +35,9 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
     };
 
     PUBLIC FUNCTION("string", "addActionAttach") {
-		SELF_VAR("Drone") addAction
+        // Attach Action
+        private _drone = SELF_VAR("Drone");
+		_drone addAction
         [
             format["Attach", _this],
             {
@@ -49,10 +53,14 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
             "true",
             2
         ];
+        MEMBER("addActionId", [_id C "AttachId"]);
+        _id
     };
 
     PUBLIC FUNCTION("string", "addActionDetach") {
-		SELF_VAR("Drone") addAction
+        // Detach Action
+        private _drone = SELF_VAR("Drone");
+		_drone addAction
         [
             format["Detach", _this],
             {
@@ -68,10 +76,14 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
             "true",
             2
         ];
+        MEMBER("addActionId", [_id C "DetachId"]);
+        _id
     };
 
     PUBLIC FUNCTION("string", "addActionDrop") {
-		PR _id = SELF_VAR("Drone") addAction
+        // Drop Action
+        private _drone = SELF_VAR("Drone");
+		PR _id = _drone addAction
         [
             format["Drop", _this],
             {
@@ -87,7 +99,7 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
             "true",
             2
         ];
-        MEMBER("DeleteAttachedGren", nil);
+        MEMBER("addActionId", [_id C "DropId"]);
         _id
     };
 
@@ -97,15 +109,38 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
         _drone removeAction _this;
     };
 
-    PUBLIC FUNCTION("string", "removeActions") {
+    PUBLIC FUNCTION("string", "removeGrenActions") {
 		PR _drone = SELF_VAR("Drone");
-	    PR _deviceInst = _drone GV ["DGM_deviceInstance", {}];
-        PR _grenInfo = METHOD(_deviceInst, "getGrenadeData", _this);   
+        PR _grenActions = MEMBER("getGrenActions", _this);   
 
-        MEMBER("removeAction", _grenInfo get "DetachId");
-        METHOD("removeAction", _grenInfo get "DropId");
+        MEMBER("removeAction", _grenActions get "DetachId");
+        METHOD("removeAction", _grenActions get "DropId");
     };
 
-    PRIVATE FUNCTION()
+    PUBLIC FUNCTION("string", "getGrenActions") {
+        SELF_VAR("Actions") getOrDefault [_this, createHashMap];
+    };
+
+    PRIVATE FUNCTION("array", "addActionId") {
+        params[["_id", -1, [0]], ["_name", "", [""]]];
+
+        if ((_id == -1) || (_name == "")) EX;
+
+        switch (_name) do {
+            case "MainAction": {
+                MEMBER("MainAction", _id);
+            };
+            case "CloseAction": {
+                MEMBER("CloseAction", _id);
+            };
+            default {
+                PR _actions = SELF_VAR("Actions");
+                PR _grenHash = _actions getOrDefault [_name, createHashMap];
+                _grenHash set ["_name", _id];
+            };
+        };
+
+        SELF_VAR("AllActions") pushBack _id;
+    };
 
 ENDCLASS;
