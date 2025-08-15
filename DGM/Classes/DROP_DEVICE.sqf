@@ -41,8 +41,6 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
             ["_removeSmokes", D_GET_VAR("remove_smokes", true)]
         ];
 
-        MEMBER("DefineAttachParams", nil);
-
         MEMBER("Drone", _drone);
         MEMBER("SlotNum", _slotNum);
         MEMBER("SpawnWithGren", _spawnWithGren);
@@ -66,22 +64,24 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
             ]
         */
 
-        if (_spawnWithGren) then {
+        if (_spawnWithGren && (local _drone)) then {
             MEMBER("SpawnAttachedGren", _addedItems select 0);
             {
                 ["DGM_attachGrenEvent", [_drone, _x, objNull]] call CBA_fnc_globalEvent;
             } forEach _addedItems;
         };
+        MEMBER("DefineAttachParams", nil);
+        MEMBER("DefineAllowedGrens", nil);
 
 		_drone setVariable ["DGM_deviceInstance", _instance];
     };
 
-    PUBLIC FUNCTION("array", "deconstructor") {
+    PUBLIC FUNCTION("array", "deconstructor") { // execute globaly
 		MEMBER("DeleteAttachedGren", nil);
 
         ["delete"] call (_drone GV ["DGM_menuInstance", {}]);
 
-		_drone setVariable ["DGM_deviceInstance", nil, true];
+		_drone setVariable ["DGM_deviceInstance", nil];
     };
 
     PUBLIC FUNCTION("ANY", "DefineAttachParams") {

@@ -54,6 +54,7 @@
 #define STR_EMPTY(s) (s isEqualTo "")
 #define ARR_EMPTY(a) (count a == 0)
 // #define REB_itemRebsClasses (keys REB_all_classes)
+#define ARGS PR _args = 
 
 #define ABSOLUTE_RANDOM_NUM (round (((random 2) * 100000) + (systemTimeUTC select -1)))
 

@@ -1,4 +1,6 @@
 #include "includes\defines.h"
+#include "Classes\DROP_DEVICE.sqf"
+#include "Classes\DROP_MENU.sqf"
 
 FUNC(attachGrenEvent) = {
 	params["_drone", "_grenClass", ["_caller", player]];
@@ -40,6 +42,10 @@ FUNC(dropGrenEvent) = {
 	};
 	if (_caller == player) then {
 		METHOD(_deviceInst, "Drop", _grenClass);
+
+        PR _itemName = ITEM_NAME(_grenClass);
+
+		hint LOC LBL_DROPED_GREN;
 	};
 	METHOD(_menuInst, "removeGrenActions", _grenClass);
 };
