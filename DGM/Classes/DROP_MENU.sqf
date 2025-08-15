@@ -201,7 +201,10 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
         private _amount = METHOD(_deviceInst, "getGrenAmount", _class);
         private _actionsHash = SELF_VAR("Actions") get _class;
 
-        // if (_amount <= 0) exitWith {false};
+        if (_amount <= 0) exitWith {
+            MEMBER("removeGrenActions", _class);
+            false
+        };
 
         PR _itemAmount = _amount;
         PR _itemName = ITEM_NAME(_class);

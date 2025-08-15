@@ -1,4 +1,5 @@
-
+class CfgFunctions 
+{
     class DGM
     {
         class Main
@@ -11,3 +12,4 @@
             class removeDropDevice {};
         };
     };
+};

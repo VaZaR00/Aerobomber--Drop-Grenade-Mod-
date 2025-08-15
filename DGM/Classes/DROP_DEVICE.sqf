@@ -30,11 +30,12 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
 
 
     PUBLIC FUNCTION("array", "constructor") { // execute globaly
-        params [
+        PR _drone = _this#0;
+        params[
             "_drone",
-            ["_slotNum", 1],
-            ["_spawnWithGren", true],
-            ["_addedItems", []],
+            ["_slotNum", D_GET_VAR("Amount_of_slots_t", 1)],
+            ["_spawnWithGren", D_GET_VAR("spawn_with_gren", true)],
+            ["_addedItems", D_GET_VAR("list_of_grens", "")],
             ["_allowOnlyListed", D_GET_VAR("allow_only_list", false)],
             ["_removeListed", D_GET_VAR("remove_list_grens", false)],
             ["_removeChemlights", D_GET_VAR("remove_chemlights", true)],
@@ -48,7 +49,7 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
         MEMBER("Z_offset", _zOffset);
         MEMBER("TempDropGren", objNull);
 
-        PR _menuInstance = NEW(IOO_DROP_MENU, [_drone]);
+        PR _menuInstance = NEW(OO_DROP_MENU, [_drone]);
         MEMBER("MenuInstance", _menuInstance);
 
         MEMBER("DroneGrenList", createHashMap);
@@ -235,9 +236,15 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
         PR _drone = SELF_VAR("Drone");
         PR _item = _this;
 
+        ITEM_DATA(_item);
+
+        if ("mavik" in (typeOf _drone)) then {
+            [missionNamespace, "DB_mavic_showMessage", []] call BIS_fnc_callScriptedEventHandler;
+        };
+
         PR _droneVelocity = velocity _drone;
         PR _pos = _drone modelToWorld [0,0, SELF_VAR("Z_offset")];
-        PR _gren = _item createvehicle _pos;
+        PR _gren = _itemAmmo createvehicle _pos;
         _gren setShotParents [_drone, player];
 
         PR _velCoef = 1.5;
@@ -277,6 +284,8 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
 
         PR _drone = SELF_VAR("Drone");
 
+        ITEM_DATA(_item);
+
         PR _zOffset = SELF_VAR("TempAttachGrenOffset");
         //for specific grens on mavik there is special offset
         if ("mavik" in (typeOf _drone)) then {
@@ -294,7 +303,7 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
                 _zOffset = -0.04;
             };
         };
-        _gren = createSimpleObject [_item, [0,0,0]];
+        _gren = createSimpleObject [_itemModel, [0,0,0]];
         _gren attachTo [_drone, [0,0,_zOffset]];
 
         MEMBER_GLOBAL("TempAttachedGren", _gren);

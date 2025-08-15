@@ -1,9 +1,10 @@
 #include "generic.h"
 #include "oop.h"
 
-#define PREFX DGM 
-#define FUNC(fnc) PREFX##_fnc_##fnc
-
+#define PREFX DGM
+#define PREF_FNC PREFX##_fnc_
+#define FUNC(fnc) PREF_FNC##fnc
+#define QFUNC(f) (MGVAR [STR(PREF_FNC) + f, {}])
 
 #define D_GET_VAR(var, def) (_drone getVariable [var, def])
 #define D_SET_VAR(var, val) _drone setVariable [var, val, true]
