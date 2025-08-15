@@ -1,0 +1,327 @@
+#include "..\includes\defines.h"
+
+/*
+    Класс: OO_DROP_DEVICE
+
+    Управляет состоянием системы сброса предметов с дрона (бекенд).
+    Все переменные класса — глобальные и синхронизируются через методы класса.
+    Локальные переменные интерфейса (например, ActionIds) должны храниться на объекте дрона локально.
+*/
+
+CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
+
+    PUBLIC VARIABLE("object", "Drone");              // дрон
+    PUBLIC VARIABLE("scalar", "SlotNum");            // количество слотов
+    PUBLIC VARIABLE("bool", "SpawnWithGren");        // спавнить ли с гранатой
+    PUBLIC VARIABLE("array", "AddedItems");          // список добавленных предметов
+    PUBLIC VARIABLE("bool", "AllowOnlyListed");          
+    PUBLIC VARIABLE("bool", "RemoveListed");          
+    PUBLIC VARIABLE("bool", "RemoveChemlights");          
+    PUBLIC VARIABLE("bool", "RemoveSmokes");          
+
+    PRIVATE VARIABLE("hashmap", "DroneGrenList");     // [класс гранаты] = [кол-во]
+    PRIVATE VARIABLE("array", "AllowedGrenList");     // 
+    PRIVATE VARIABLE("array", "Z_offset");            // z offset
+    PRIVATE VARIABLE("bool", "SpawnGren");          // 
+    PRIVATE VARIABLE("object", "TempAttachedGren");          // 
+    PRIVATE VARIABLE("scalar", "TempAttachGrenOffset");          // 
+    PRIVATE VARIABLE("object", "TempDropGren");          // 
+    PRIVATE VARIABLE("code", "MenuInstance");          // 
+
+
+    PUBLIC FUNCTION("array", "constructor") { // execute globaly
+        params [
+            "_drone",
+            ["_slotNum", 1],
+            ["_spawnWithGren", true],
+            ["_addedItems", []],
+            ["_allowOnlyListed", D_GET_VAR("allow_only_list", false)],
+            ["_removeListed", D_GET_VAR("remove_list_grens", false)],
+            ["_removeChemlights", D_GET_VAR("remove_chemlights", true)],
+            ["_removeSmokes", D_GET_VAR("remove_smokes", true)]
+        ];
+
+        MEMBER("DefineAttachParams", nil);
+
+        MEMBER("Drone", _drone);
+        MEMBER("SlotNum", _slotNum);
+        MEMBER("SpawnWithGren", _spawnWithGren);
+        MEMBER("AddedItems", _addedItems);
+        MEMBER("Z_offset", _zOffset);
+        MEMBER("TempDropGren", objNull);
+
+        PR _menuInstance = NEW(IOO_DROP_MENU, [_drone]);
+        MEMBER("MenuInstance", _menuInstance);
+
+        MEMBER("DroneGrenList", createHashMap);
+        /*
+            DroneGrenList Element Structure
+
+            Type: hashmap
+            [
+                "Name": string,
+                "Amount": int,
+                "DropId": int, 
+                "DetachId": int 
+            ]
+        */
+
+        if (_spawnWithGren) then {
+            MEMBER("SpawnAttachedGren", _addedItems select 0);
+            {
+                ["DGM_attachGrenEvent", [_drone, _x, objNull]] call CBA_fnc_globalEvent;
+            } forEach _addedItems;
+        };
+
+		_drone setVariable ["DGM_deviceInstance", _instance];
+    };
+
+    PUBLIC FUNCTION("array", "deconstructor") {
+		MEMBER("DeleteAttachedGren", nil);
+
+        ["delete"] call (_drone GV ["DGM_menuInstance", {}]);
+
+		_drone setVariable ["DGM_deviceInstance", nil, true];
+    };
+
+    PUBLIC FUNCTION("ANY", "DefineAttachParams") {
+        _spwnDef = if (SELF_VAR("SlotNum") == 1) then {true} else {false};
+        _values = switch (typeOf _drone) do {
+            case "UAV_01": {
+                [_spwnDef, -0.12, -0.3]
+            };
+            case "mavik": {
+                [_spwnDef, -0.075, -0.3]
+            };
+            default {
+                [false, -0.2, -0.45]
+            };
+        };
+        _values params ["_spawnGrenObj", "_z_offsetAttach", "_z_offsetDrop"];
+
+        MEMBER("SpawnGren", _spawnGrenObj);
+        MEMBER("TempAttachGrenOffset", _z_offsetAttach);
+        MEMBER("Z_offset", _z_offsetDrop);
+    };
+
+    PUBLIC FUNCTION("ANY", "DefineAllowedGrens") {
+        (MEMBER("GetConfigData", nil)) params ["_expArr", "_cfgAmmoList"];
+
+        PR _addedItemsArr = [];
+
+        PR _grenList = +_expArr;
+        if (_allowOnlyListed) then {
+            _grenList = [];
+            _removeListed = false;
+        };
+
+        // adding\removing gren classes from "List of things you want to attach"
+        _addArr = _addedItems splitString ";,: ";
+
+        if (count _addArr > 0) then {
+            {	
+                _el = _x;
+                //if ammo classes written to custom list
+                if (_el in _cfgAmmoList) then {
+                    _magsOfAmmoCfg = "(_x >> 'ammo') == _el;" configClasses (configFile >> "CfgMagazines");
+                    _magsOfAmmoCfgEl = _magsOfAmmoCfg select 0;
+                    _magsOfAmmo = configName _magsOfAmmoCfgEl;
+                    if (_removeListed) then {
+                        _grenList = _grenList - [_magsOfAmmo];
+                    }else{
+                        _addedItemsArr pushBack _magsOfAmmo;
+                    };
+                }else { 
+                    //if magazine classes written to custom list
+                    if (_removeListed) then {
+                        _grenList = _grenList - [_el];
+                    }else{
+                        _addedItemsArr pushBack _el;
+                    };
+                };
+            } forEach _addArr;
+        };
+
+        //removing chemlights
+        if (_removeChemlights) then {
+            {
+                _el = _x;
+                if (("hemlight" in _el) || ("HandFlare" in _el)) then {
+                    _grenList = _grenList - [_el];
+                };
+            } forEach _grenList;
+        };
+
+        //removing smokes
+        if (_removeSmokes) then {
+            _rmvSmokeArr = [];
+            _rmvSmokeArrCfgs = "'moke' in getText(_x >> 'displayNameShort');" configClasses (configFile >> "CfgMagazines");
+            {
+                _el = configName _x;
+                _rmvSmokeArr pushBack _el;
+            }forEach _rmvSmokeArrCfgs;
+            {
+                _el = _x;
+                if (
+                    ("smoke" in _el) or
+                    ("m18" in _el) or
+                    ("83" in _el) or
+                    ("m8h" in _el) or
+                    ("DM32" in _el) or
+                    ("nsp" in _el) or
+                    ("rdg" in _el)
+                ) then {
+                    if (_el in _cfgAmmoList) then {
+                        _magsOfAmmoCfg = "getText(_x >> 'ammo') == _el;" configClasses (configFile >> "CfgMagazines");
+                        _magsOfAmmoCfgEl = _magsOfAmmoCfg select 0;
+                        _magsOfAmmo = configName _magsOfAmmoCfgEl;
+                        _grenList = _grenList - [_magsOfAmmo];
+                    }else{
+                        _grenList = _grenList - [_el];
+                    };
+                };
+            } forEach _grenList;
+            _grenList = _grenList - _rmvSmokeArr;
+        };
+
+        CLR_DUPS(_grenList);
+
+        MEMBER("AllowedGrenList", _grenList);
+
+        _grenList
+    };
+
+    PUBLIC FUNCTION("ANY", "GetConfigData") {
+        PR _expArr = MGVAR "DGM_var_expArr";
+        PR _ammoCfg = MGVAR "DGM_var_ammoCfg";
+        if (isNil "_expArr") then {
+            ([] call DGM_fnc_getAllExp) params ["_expArr", "_cfgAmmoList"];
+        };
+        [_expArr, _ammoCfg]
+    };
+
+    PUBLIC FUNCTION("array", "addGrenade") {
+        params ["_grenClass", ["_amount", 1]];
+        private _droneGrenList = +SELF_VAR("DroneGrenList");
+        private _info = MEMBER("getGrenadeData", _grenClass);
+        private _num = _info getOrDefault ["Amount", 0];
+        _info set ["Amount", _num + _amount];
+        _droneGrenList set [_grenClass, _info];
+        MEMBER_GLOBAL("DroneGrenList", _droneGrenList);
+        MEMBER("SpawnAttachedGren", _grenClass);
+    };
+
+    PUBLIC FUNCTION("array", "removeGrenade") {
+        params ["_grenClass", ["_amount", 1]];
+        private _droneGrenList = +SELF_VAR("DroneGrenList");
+        private _info = MEMBER("getGrenadeData", _grenClass);
+        private _num = _info getOrDefault ["Amount", 0];
+        if (_num <= _amount) then {
+            _droneGrenList deleteAt _grenClass;
+        } else {
+            _info set ["Amount", _num - _amount];
+            _droneGrenList set [_grenClass, _info];
+        };
+        MEMBER_GLOBAL("DroneGrenList", _droneGrenList);
+    };
+
+    PUBLIC FUNCTION("string", "Drop") {
+        PR _drone = SELF_VAR("Drone");
+        PR _item = _this;
+
+        PR _droneVelocity = velocity _drone;
+        PR _pos = _drone modelToWorld [0,0, SELF_VAR("Z_offset")];
+        PR _gren = _item createvehicle _pos;
+        _gren setShotParents [_drone, player];
+
+        PR _velCoef = 1.5;
+
+        if (
+            (missionNamespace getVariable ["DGM_shoot_rockets", true]) &&
+            {("PG7" in _item) or
+            ("OG7" in _item) or
+            ("TPG7" in _item) or
+            ("type6" in _item) or
+            ("RPG32" in _item) or
+            ("Vorona" in _item) or
+            ("fgm" in _item) or
+            ("itan" in _item)}
+        ) then {
+            _gren setVectorDirandUp [vectorDir _drone,[0.1,0.1,1]];
+            if ("OG7" in _item) then {
+                _gren setVelocityModelSpace [0, 70 ,0];
+            } else {
+                _gren setVelocity [0, 0 ,0];
+            };
+        } else {
+            _gren setVectorDirandUp [[0,0,-1],[0.1,0.1,1]];
+            _gren setVelocity [(_droneVelocity select 0) / _velCoef, (_droneVelocity select 1) / _velCoef ,-2];
+        };
+        _drone setVariable ["DGM_tempGren", _gren, true];
+
+        MEMBER_GLOBAL("TempDropGren", _gren);
+
+        PR _tempGren = SELF_VAR("TempAttachedGren");
+        PR _grenAmount = MEMBER("getGrenAmount", _item);
+        if (((typeOf _tempGren) isEqualTo _item) && (_grenAmount == 0)) then {
+            MEMBER("DeleteAttachedGren", nil);
+        };
+
+        _gren
+    }; 
+
+    PUBLIC FUNCTION("string", "SpawnAttachedGren") {
+        PR _item = _this;
+        
+        if !(SELF_VAR("TempAttachedGren") isEqualTo objNull) EX;
+
+        PR _drone = SELF_VAR("Drone");
+
+        PR _zOffset = SELF_VAR("TempAttachGrenOffset");
+        //for specific grens on mavik there is special offset
+        if ("mavik" in (typeOf _drone)) then {
+            if (
+                ("og25" in _item) or
+                ("433" in _item) or
+                ("441" in _item) or
+                ("Rnd_HE" in _item) or
+                ("M58" in _item) or
+                ("M66" in _item) or
+                ("M71" in _item) or
+                ("VG40" in _item) or
+                ("Mavic_F1" in _item)
+            ) then {
+                _zOffset = -0.04;
+            };
+        };
+        _gren = createSimpleObject [_item, [0,0,0]];
+        _gren attachTo [_drone, [0,0,_zOffset]];
+
+        MEMBER_GLOBAL("TempAttachedGren", _gren);
+
+        _gren
+    }; 
+
+    PUBLIC FUNCTION("ANY", "DeleteAttachedGren") {
+        PR _tempGren = SELF_VAR("TempAttachedGren");
+
+        if (_tempGren isEqualTo objNull) EX;
+
+        PR _drone = SELF_VAR("Drone");
+
+        deleteVehicle _tempGren;
+
+        MEMBER_GLOBAL("TempAttachedGren", objNull);
+    }; 
+
+    PUBLIC FUNCTION("string", "getGrenadeData") {
+        private _droneGrenList = SELF_VAR("DroneGrenList");
+        (_droneGrenList getOrDefault [_this, createHashMap])
+    }; 
+
+    PUBLIC FUNCTION("string", "getGrenAmount") {
+        private _droneGrenList = SELF_VAR("DroneGrenList");
+        (_droneGrenList getOrDefault [_this, createHashMap]) getOrDefault ["Amount", 0];
+    }; 
+
+ENDCLASS;
