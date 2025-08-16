@@ -41,7 +41,6 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
             ["_removeChemlights", D_GET_VAR("remove_chemlights", true)],
             ["_removeSmokes", D_GET_VAR("remove_smokes", true)]
         ];
-        ["device constructor", _this] RLOG
 
         _addedItems = _addedItems splitString ";,: ";
 
@@ -68,13 +67,11 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
 
         PR _menuInstance = NEW(OO_DROP_MENU, [_drone]);
         MEMBER("MenuInstance", _menuInstance);
-        ["MENU_INST", _menuInstance] RLOG
 
         MEMBER("DefineAttachParams", nil);
         MEMBER("DefineAllowedGrens", nil);
 
         if (_spawnWithGren && (local _drone)) then {
-            ["_spawnWithGren", _addedItems, MEMBER("SpawnAttachedGren", _addedItems select 0)] RLOG
             MEMBER("SpawnAttachedGren", _addedItems select 0);
             {
                 ["DGM_attachGrenEvent", [_drone, _x, objNull]] call CBA_fnc_globalEvent;
@@ -216,8 +213,6 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
         private _info = MEMBER("getGrenadeData", _grenClass);
         private _num = _info getOrDefault ["Amount", 0];
 
-        ["addGrenade", _grenClass, _num, format["new amount = %1", _num + _amount], _info] RLOG
-
         _info set ["Amount", _num + _amount];
         _droneGrenList set [_grenClass, _info];
 
@@ -240,8 +235,6 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
         };
         MEMBER_GLOBAL("DroneGrenList", _droneGrenList);
 
-        ["removeGrenade", _grenClass, _num, _info] RLOG
-        
         PR _tempGren = SELF_VAR("TempAttachedGren");
         PR _grenAmount = MEMBER("getGrenAmount", _grenClass);
 
@@ -292,8 +285,6 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
 
         MEMBER_GLOBAL("TempDropGren", _gren);
 
-        ["Drop!", _drone, _item, _itemAmmo, _gren] RLOG
-
         _gren
     }; 
 
@@ -334,8 +325,6 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
     PUBLIC FUNCTION("ANY", "DeleteAttachedGren") {
         PR _tempGren = SELF_VAR("TempAttachedGren");
 
-        [_tempGren] RLOG
-
         if (_tempGren isEqualTo objNull) EX;
 
         PR _drone = SELF_VAR("Drone");
@@ -361,8 +350,6 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
 
         private _drone = SELF_VAR("Drone");
         private _amount = MEMBER("getGrenAmount", _this);
-
-        ["grenadeAvailable", _this, _amount, ((isNil "_amount") || {_amount <= 0})] RLOG;
 
         if ((isNil "_amount") || {_amount <= 0}) exitWith {
             false
