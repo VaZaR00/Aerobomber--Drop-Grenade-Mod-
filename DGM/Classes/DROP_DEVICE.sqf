@@ -12,6 +12,7 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
 
     PUBLIC VARIABLE("object", "Drone");              // дрон
     PUBLIC VARIABLE("scalar", "SlotNum");            // количество слотов
+    PUBLIC VARIABLE("scalar", "SlotsOccupied");      // количество занятых слотов
     PUBLIC VARIABLE("bool", "SpawnWithGren");        // спавнить ли с гранатой
     PUBLIC VARIABLE("array", "AddedItems");          // список добавленных предметов
     PUBLIC VARIABLE("bool", "AllowOnlyListed");          
@@ -45,9 +46,12 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
         _addedItems = _addedItems splitString ";,: ";
 
 		_drone setVariable ["DGM_deviceInstance", _instance];
+		_drone setVariable [MAX_SLOTS, _slotNum];
+		_drone setVariable [CURR_SLOTS, 0];
 
         MEMBER("Drone", _drone);
         MEMBER("SlotNum", _slotNum);
+        MEMBER("SlotsOccupied", 0);
         MEMBER("SpawnWithGren", _spawnWithGren);
         MEMBER("AddedItems", _addedItems);
         MEMBER("TempDropGren", objNull);
@@ -73,9 +77,9 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
 
         if (_spawnWithGren && (local _drone)) then {
             MEMBER("SpawnAttachedGren", _addedItems select 0);
-            {
-                ["DGM_attachGrenEvent", [_drone, _x, objNull]] call CBA_fnc_globalEvent;
-            } forEach _addedItems;
+            for "_i" from 1 to _slotNum do {
+                ["DGM_attachGrenEvent", [_drone, (_addedItems#0), objNull]] call CBA_fnc_globalEvent;
+            };
         };
     };
 
@@ -89,11 +93,12 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
 
     PUBLIC FUNCTION("ANY", "DefineAttachParams") {
         PR _spwnDef = if (SELF_VAR("SlotNum") == 1) then {true} else {false};
-        PR _values = switch (typeOf _drone) do {
-            case "UAV_01": {
+        PR _drType = (typeOf _drone);
+        PR _values = switch (true) do {
+            case ("UAV_01" in _drType): {
                 [_spwnDef, -0.12, -0.3]
             };
-            case "mavik": {
+            case ("mavik" in _drType): {
                 [_spwnDef, -0.075, -0.3]
             };
             default {
@@ -218,6 +223,13 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
 
         MEMBER_GLOBAL("DroneGrenList", _droneGrenList);
         MEMBER("SpawnAttachedGren", _grenClass);
+
+        // update slots count
+        PR _drone = SELF_VAR("Drone");
+        PR _newSlotsAmount = SELF_VAR("SlotsOccupied") + _amount;
+        
+        MEMBER_GLOBAL("SlotsOccupied", _newSlotsAmount);
+		DSVAR [CURR_SLOTS, _newSlotsAmount, true];
     };
 
     PUBLIC FUNCTION("array", "removeGrenade") {
@@ -238,9 +250,17 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
         PR _tempGren = SELF_VAR("TempAttachedGren");
         PR _grenAmount = MEMBER("getGrenAmount", _grenClass);
 
-        if ((LWR(_grenClass) in LWR(str _tempGren)) && (_grenAmount == 0)) then {
+        // delete temp object
+        if ((_grenClass == (SELF_VAR("Drone") GV ["DGM_tempGrenClassname", ""])) && (_grenAmount == 0)) then {
             MEMBER("DeleteAttachedGren", nil);
         };
+
+        // update slots count
+        PR _drone = SELF_VAR("Drone");
+        PR _newSlotsAmount = SELF_VAR("SlotsOccupied") - _amount;
+        
+        MEMBER_GLOBAL("SlotsOccupied", _newSlotsAmount);
+		DSVAR [CURR_SLOTS, _newSlotsAmount, true];
     };
 
     PUBLIC FUNCTION("string", "Drop") {
@@ -285,6 +305,8 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
 
         MEMBER_GLOBAL("TempDropGren", _gren);
 
+		SHOW_HINT TXT_DROPED;
+
         _gren
     }; 
 
@@ -318,6 +340,8 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
         _gren attachTo [_drone, [0,0,_zOffset]];
 
         MEMBER_GLOBAL("TempAttachedGren", _gren);
+        _drone setVariable ["DGM_TempAttachedGren", _gren, true];
+        _drone setVariable ["DGM_tempGrenClassname", _item, true];
 
         _gren
     }; 
@@ -332,6 +356,8 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
         deleteVehicle _tempGren;
 
         MEMBER_GLOBAL("TempAttachedGren", objNull);
+        _drone setVariable ["DGM_TempAttachedGren", objNull, true];
+        _drone setVariable ["DGM_tempGrenClassname", "", true];
     }; 
 
     PUBLIC FUNCTION("string", "getGrenadeData") {
@@ -356,6 +382,17 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
         };
 
         true
+    };
+
+    PUBLIC FUNCTION("scalar", "setSlotsNumber") {
+        if (_this <= 0) exitWith {
+            SHOW_HINT LBL_SLOTS_NOT_ENOUGH;
+        };
+
+        PR _drone = SELF_VAR("Drone");
+
+        MEMBER_GLOBAL("SlotNum", _this);
+		DSVAR [MAX_SLOTS, _this, true];
     };
 
 ENDCLASS;

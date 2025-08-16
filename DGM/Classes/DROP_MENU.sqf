@@ -10,6 +10,7 @@
 #define IS_MENU_ACTIVE "_target getVariable ['DGM_IsMenuActive', false]"
 #define IS_CONTROLLING_DRONE_CODE ((vehicle (remoteControlled player)) isEqualTo _target)
 #define IS_CONTROLLING_DRONE STR(IS_CONTROLLING_DRONE_CODE)
+#define SLOTS_AVAILABLE_CODE ((_target GV [CURR_SLOTS, 0]) < (_target GV [MAX_SLOTS, 0]))
 
 
 CLASS("OO_DROP_MENU") // IOO_DROP_MENU
@@ -94,10 +95,15 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
             {
                 params ["_target", "_caller", "_actionId", "_arguments"];
                 _arguments params ["_grenClass"];
+
+                if !((_target GV [CURR_SLOTS, 0]) < (_target GV [MAX_SLOTS, 0])) exitWith {
+                    SHOW_HINT LBL_CANT_ADD_MORE_GREN;
+                };
+
                 ["DGM_attachGrenEvent", [_target, _grenClass, _caller]] call CBA_fnc_globalEvent;
             },
             [_itemClass],
-            format["(%1) && !(%2)", IS_MENU_ACTIVE, IS_CONTROLLING_DRONE],
+            format["(%1) && !(%2) && (call %3)", IS_MENU_ACTIVE, IS_CONTROLLING_DRONE, {SLOTS_AVAILABLE_CODE}],
             2,
             _itemClass
         ];
@@ -330,7 +336,7 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
         } forEach _playerMags;
 
         if (count _playerGrens == 0) exitWith {
-            hint LBL_DONT_HAVE_GRENS;
+            SHOW_HINT LBL_DONT_HAVE_GRENS;
         };
 
         DGM_currentGrenadesListCounts =  _playerGrens;

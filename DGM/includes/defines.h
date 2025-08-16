@@ -10,8 +10,13 @@
 #define VAR(fnc) PREF_VAR##fnc
 #define QFUNC(f) (MGVAR [STR(PREF_FNC) + f, {}])
 
+#define CURR_SLOTS "DGM_currentSlotsOccupied"
+#define MAX_SLOTS "DGM_maxSlotNum"
+
 #define D_GET_VAR(var, def) (_drone getVariable [var, def])
 #define D_SET_VAR(var, val) _drone setVariable [var, val, true]
+#define DGVAR _drone getVariable
+#define DSVAR _drone setVariable
 #define CLR_DUPS(arr) arr = arr arrayIntersect arr;
 
 #define ITEM_NAME(item) (getText (configFile >> "CfgMagazines" >> item >> "displayName"))
@@ -23,6 +28,8 @@
 
     
 // localization
+#define SHOW_HINT hint
+
 #define LOC  
 
 #define LBL_ATTACH_GREN (LOC "Attach %1: %2")
@@ -33,6 +40,8 @@
 #define LBL_CLOSE_MENU (LOC "Close menu")
 #define LBL_MENU (LOC "Drop device menu")
 #define LBL_DROPED_GREN (LOC "%1 Dropped")
+#define LBL_SLOTS_NOT_ENOUGH (LOC "Slots number can't be less than 1!")
+#define LBL_CANT_ADD_MORE_GREN (LOC "Can't add more grenades")
 
 #define TXT_ATTACH format[TXT_CLR(LBL_ATTACH_GREN, GREEN), _itemName, _itemAmount]
 #define TXT_DETACH format[TXT_CLR(LBL_DETACH_GREN, RED), _itemName, _itemAmount]

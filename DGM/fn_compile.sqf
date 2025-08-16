@@ -56,10 +56,6 @@ FUNC(dropGrenEvent) = {
 	};
 	if (_caller == player) then {
 		METHOD(_deviceInst, "Drop", _grenClass);
-
-        PR _itemName = ITEM_NAME(_grenClass);
-
-		hint LBL_DROPED_GREN;
 	};
 
 	// wait until amount updated globaly
