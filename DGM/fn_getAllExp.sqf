@@ -24,3 +24,5 @@ _expArr append ["MiniGrenade", "1Rnd_HE_Grenade_shell", "HandGrenade"];
 
 MSVAR ["DGM_var_expArr", _expArr];
 MSVAR ["DGM_var_ammoCfg", _ammoCfg];
+
+[_expArr, _ammoCfg]

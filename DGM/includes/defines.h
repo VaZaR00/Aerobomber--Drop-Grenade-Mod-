@@ -3,14 +3,18 @@
 
 #define PREFX DGM
 #define PREF_FNC PREFX##_fnc_
+#define PREF_VAR PREFX##_var_
+#define PREF(t) DGM##_##t
+#define QPREF(t) STR(PREF(t))
 #define FUNC(fnc) PREF_FNC##fnc
+#define VAR(fnc) PREF_VAR##fnc
 #define QFUNC(f) (MGVAR [STR(PREF_FNC) + f, {}])
 
 #define D_GET_VAR(var, def) (_drone getVariable [var, def])
 #define D_SET_VAR(var, val) _drone setVariable [var, val, true]
 #define CLR_DUPS(arr) arr = arr arrayIntersect arr;
 
-#define ITEM_NAME(item) (configFile >> "CfgMagazines" >> item >> "displayName")
+#define ITEM_NAME(item) (getText (configFile >> "CfgMagazines" >> item >> "displayName"))
 #define ITEM_DATA(item)\
     PR _itemConfig = configFile >> "CfgMagazines" >> item; \
     PR _itemName = getText (_itemConfig >> "displayName"); \
@@ -19,18 +23,23 @@
 
     
 // localization
-#define LBL_ATTACH_GREN "Attach %1: %2"
-#define LBL_DETACH_GREN "Detach %1: %2"
-#define LBL_DROP_GREN "Drop %1: %2"
-#define LBL_DONT_HAVE_GRENS "You don't have grenades"
-#define LBL_GRENS_MENU "Attach grenades menu: %1 slots"
-#define LBL_CLOSE_MENU "Close menu"
-#define LBL_DROPED_GREN "%1 Dropped"
+#define LOC  
+
+#define LBL_ATTACH_GREN (LOC "Attach %1: %2")
+#define LBL_DETACH_GREN (LOC "Detach %1: %2")
+#define LBL_DROP_GREN (LOC "Drop %1: %2")
+#define LBL_DONT_HAVE_GRENS (LOC "You don't have grenades")
+#define LBL_GRENS_MENU (LOC "Attach grenades menu: %1 slots")
+#define LBL_CLOSE_MENU (LOC "Close menu")
+#define LBL_MENU (LOC "Drop device menu")
+#define LBL_DROPED_GREN (LOC "%1 Dropped")
 
 #define TXT_ATTACH format[TXT_CLR(LBL_ATTACH_GREN, GREEN), _itemName, _itemAmount]
 #define TXT_DETACH format[TXT_CLR(LBL_DETACH_GREN, RED), _itemName, _itemAmount]
 #define TXT_DROP format[TXT_CLR(LBL_DROP_GREN, RED), _itemName, _itemAmount]
 #define TXT_DROPED format[LBL_DROPED_GREN, _itemName]
+#define TXT_MENU format[TXT_CLR(LBL_MENU, BLUE)]
+#define TXT_CLOSE_MENU format[TXT_CLR(LBL_CLOSE_MENU, RED_b)]
 
 #define RED "#ff0000"
 #define RED_b "#b01313"
