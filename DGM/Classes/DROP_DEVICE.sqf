@@ -45,15 +45,13 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
 
         _addedItems = _addedItems splitString ";,: ";
 
+		_drone setVariable ["DGM_deviceInstance", _instance];
+
         MEMBER("Drone", _drone);
         MEMBER("SlotNum", _slotNum);
         MEMBER("SpawnWithGren", _spawnWithGren);
         MEMBER("AddedItems", _addedItems);
         MEMBER("TempDropGren", objNull);
-
-        ["MENU_INST", _drone] RLOG
-        PR _menuInstance = NEW(OO_DROP_MENU, [_drone]);
-        MEMBER("MenuInstance", _menuInstance);
 
         MEMBER("DroneGrenList", createHashMap);
         /*
@@ -68,18 +66,20 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
             ]
         */
 
+        PR _menuInstance = NEW(OO_DROP_MENU, [_drone]);
+        MEMBER("MenuInstance", _menuInstance);
+        ["MENU_INST", _menuInstance] RLOG
+
         MEMBER("DefineAttachParams", nil);
         MEMBER("DefineAllowedGrens", nil);
 
         if (_spawnWithGren && (local _drone)) then {
-            ["_spawnWithGren", MEMBER("SpawnAttachedGren", _addedItems select 0), _drone] RLOG
-            // MEMBER("SpawnAttachedGren", _addedItems select 0);
+            ["_spawnWithGren", _addedItems, MEMBER("SpawnAttachedGren", _addedItems select 0)] RLOG
+            MEMBER("SpawnAttachedGren", _addedItems select 0);
             {
                 ["DGM_attachGrenEvent", [_drone, _x, objNull]] call CBA_fnc_globalEvent;
             } forEach _addedItems;
         };
-
-		_drone setVariable ["DGM_deviceInstance", _instance];
     };
 
     PUBLIC FUNCTION("array", "deconstructor") { // execute globaly
@@ -216,7 +216,7 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
         private _info = MEMBER("getGrenadeData", _grenClass);
         private _num = _info getOrDefault ["Amount", 0];
 
-        ["addGrenade", _grenClass, _num, _info] RLOG
+        ["addGrenade", _grenClass, _num, format["new amount = %1", _num + _amount], _info] RLOG
 
         _info set ["Amount", _num + _amount];
         _droneGrenList set [_grenClass, _info];
@@ -346,10 +346,12 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
     PUBLIC FUNCTION("string", "getGrenadeData") {
         private _droneGrenList = SELF_VAR("DroneGrenList");
         (_droneGrenList getOrDefault [_this, createHashMap])
-    }; 
+    };
 
     PUBLIC FUNCTION("string", "getGrenAmount") {
         private _droneGrenList = SELF_VAR("DroneGrenList");
+        ["getGrenAmount", SELF_VAR("DroneGrenList")] RLOG
+        if (isNil "_droneGrenList") exitWith {0};
         (_droneGrenList getOrDefault [_this, createHashMap]) getOrDefault ["Amount", 0];
     }; 
 

@@ -4,10 +4,11 @@
 
 FUNC(attachGrenEvent) = {
 	["attachGrenEvent", _this] RLOG
-	params["_drone", "_grenClass", ["_caller", player]];
+	params["_drone", "_grenClass", ["_caller", objNull]];
 
 	PR _deviceInst = _drone GV ["DGM_deviceInstance", {}];
 	PR _menuInst = _drone GV ["DGM_menuInstance", {}];
+	PR _currentAmount = METHOD(_deviceInst, "getGrenAmount", _grenClass);
 
 	if (local _drone) then {
 		METHOD(_deviceInst, "addGrenade", [_grenClass]);
@@ -15,6 +16,13 @@ FUNC(attachGrenEvent) = {
 	if (player == _caller) then {
 		_caller removeItem _grenClass;
 	};
+
+	["WAIT attachGrenEvent", METHOD(_deviceInst, "getGrenAmount", _grenClass), (isNil "_currentAmount"), !(isNil "_currentAmount") && {(METHOD(_deviceInst, "getGrenAmount", _grenClass) != _currentAmount)}, if !(isNil "_currentAmount") then {_currentAmount} else {-1}, _deviceInst] RLOG
+	// wait until amount updated globaly
+	waitUntil { !(isNil "_currentAmount") && {(METHOD(_deviceInst, "getGrenAmount", _grenClass) != _currentAmount)} };
+
+	["CONTINUE attachGrenEvent"] RLOG
+
 	METHOD(_menuInst, "addActionDrop", _grenClass);
 	METHOD(_menuInst, "addActionDetach", _grenClass);
 	
@@ -26,6 +34,7 @@ FUNC(detachGrenEvent) = {
 
 	PR _deviceInst = _drone GV ["DGM_deviceInstance", {}];
 	PR _menuInst = _drone GV ["DGM_menuInstance", {}];
+	PR _currentAmount = METHOD(_deviceInst, "getGrenAmount", _grenClass);
 
 	if (local _drone) then {
 		METHOD(_deviceInst, "removeGrenade", [_grenClass]);
@@ -33,6 +42,12 @@ FUNC(detachGrenEvent) = {
 	if (_caller == player) then {
 		_caller addItem _grenClass;
 	};
+
+	// wait until amount updated globaly
+	waitUntil { !(isNil "_currentAmount") && {(METHOD(_deviceInst, "getGrenAmount", _grenClass) != _currentAmount)} };
+
+	["CONTINUE detachGrenEvent"] RLOG
+
 	METHOD(_menuInst, "removeGrenActions", _grenClass);
 	METHOD(_menuInst, "UpdateMenu", nil);
 };
@@ -42,6 +57,7 @@ FUNC(dropGrenEvent) = {
 
 	PR _deviceInst = _drone GV ["DGM_deviceInstance", {}];
 	PR _menuInst = _drone GV ["DGM_menuInstance", {}];
+	PR _currentAmount = METHOD(_deviceInst, "getGrenAmount", _grenClass);
 
 	if (local _drone) then {
 		METHOD(_deviceInst, "removeGrenade", [_grenClass]);
@@ -53,6 +69,12 @@ FUNC(dropGrenEvent) = {
 
 		hint LBL_DROPED_GREN;
 	};
+
+	// wait until amount updated globaly
+	waitUntil { !(isNil "_currentAmount") && {(METHOD(_deviceInst, "getGrenAmount", _grenClass) != _currentAmount)} };
+
+	["CONTINUE dropGrenEvent"] RLOG
+
 	METHOD(_menuInst, "removeGrenActions", _grenClass);
 	METHOD(_menuInst, "UpdateMenu", nil);
 };

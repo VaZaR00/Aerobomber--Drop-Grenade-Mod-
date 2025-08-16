@@ -134,7 +134,8 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
     };
 
     PUBLIC FUNCTION("array", "addAction") {
-        params[["_type", "", [""]], ["_name", "", [""]], ["_code", {}, [{}]], ["_arguments", [], [[]]], ["_itemClass", "", [""]]];
+        ["addAction"] RLOG;
+        params[["_type", "", [""]], ["_name", "", [""]], ["_code", {}, [{}]], ["_arguments", [], [[]]], ["_condition", "", [""]], ["_itemClass", "", [""]]];
 
         ARGS [_type, _itemClass];
         if (MEMBER("actionsExists", _args)) exitWith {
@@ -142,7 +143,7 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
         };
 
         PR _drone = SELF_VAR("Drone");
-        ["addAction", SELF_VAR("Drone"), _type, _name, _itemClass, SELF_VAR("AllActions")] RLOG;
+        ["addAction ADD", SELF_VAR("Drone"), _type, _name, _itemClass, SELF_VAR("AllActions")] RLOG;
 
         if (isNil "_drone") EX;
 
@@ -219,6 +220,23 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
         SELF_VAR("Drone") setVariable ["DGM_IsMenuActive", _this];
         if (_this) then {
             MEMBER("LoadGrensMenu", nil);
+
+            PR _this = [SELF_VAR("Drone"), _instance];
+            ENSURE_SPAWN_ONCE_START
+                ["Keep menu opened"] RLOG
+                params ["_drone", "_menuInstance"];
+                PR _inventoryDisplay = 602;
+                waitUntil { 
+                    uiSleep 0.1;
+                    !(_drone getVariable ["DGM_IsMenuActive", false]) || 
+                    ((_drone distance player) > 3) || 
+                    (!(isNull (findDisplay _inventoryDisplay)))
+                };
+                if (_drone getVariable ["DGM_IsMenuActive", false]) then {  
+                    METHOD(_menuInstance, "SetMenuActive", false);
+                };
+                ["Force close menu"] RLOG
+            ENSURE_SPAWN_ONCE_END
         };
     };
 
@@ -232,10 +250,10 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
 
         if ((_itemClass == "") || (_name == "")) exitWith {false};
 
-        ["actionsExists", _name, _itemClass, SELF_VAR("Actions") get _itemClass] RLOG;
 
         PR _grenActions = SELF_VAR("Actions") get _itemClass;
         if (isNil "_grenActions") exitWith {false};
+        ["actionsExists", _name, _itemClass, !((_grenActions getOrDefault [_name, -1]) == -1)] RLOG;
         if ((_grenActions getOrDefault [_name, -1]) == -1) exitWith {false};
 
         true
@@ -250,7 +268,7 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
         private _amount = METHOD(_deviceInst, "getGrenAmount", _itemClass);
         private _actionsHash = SELF_VAR("Actions") get _itemClass;
 
-        ["modifyAction", _this, _amount, _actionsHash] RLOG
+        ["modifyAction", _this, _amount, !((isNil "_actionsHash") || (isNil "_amount") || {_amount <= 0})] RLOG
 
         if ((isNil "_actionsHash") || (isNil "_amount") || {_amount <= 0}) exitWith {
             MEMBER("removeGrenActions", _itemClass);
@@ -299,9 +317,9 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
 	    PR _currentMenuGrenades = keys _actions;
         PR _playerGrens = (itemsWithMagazines player) arrayIntersect INSTANCE_VAR(_deviceInst, "AllowedGrenList");
 
-        ["LoadGrensMenu", _playerGrens] RLOG
-
         if (isNil "_playerGrens") exitWith {};
+
+        ["LoadGrensMenu", _playerGrens] RLOG
 
         if (count _playerGrens == 0) exitWith {
             hint LBL_DONT_HAVE_GRENS;
