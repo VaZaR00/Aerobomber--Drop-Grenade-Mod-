@@ -245,7 +245,7 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
         PR _tempGren = SELF_VAR("TempAttachedGren");
         PR _grenAmount = MEMBER("getGrenAmount", _grenClass);
 
-        if (((typeOf _tempGren) isEqualTo _grenClass) && (_grenAmount == 0)) then {
+        if ((LWR(_grenClass) in LWR(str _tempGren)) && (_grenAmount == 0)) then {
             MEMBER("DeleteAttachedGren", nil);
         };
     };
@@ -323,7 +323,7 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
                 _zOffset = -0.04;
             };
         };
-        _gren = createSimpleObject [_itemModel, [0,0,0]];
+        PR _gren = createSimpleObject [_itemModel, [0,0,0]];
         _gren attachTo [_drone, [0,0,_zOffset]];
 
         MEMBER_GLOBAL("TempAttachedGren", _gren);
@@ -333,6 +333,8 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
 
     PUBLIC FUNCTION("ANY", "DeleteAttachedGren") {
         PR _tempGren = SELF_VAR("TempAttachedGren");
+
+        [_tempGren] RLOG
 
         if (_tempGren isEqualTo objNull) EX;
 
@@ -350,9 +352,23 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
 
     PUBLIC FUNCTION("string", "getGrenAmount") {
         private _droneGrenList = SELF_VAR("DroneGrenList");
-        ["getGrenAmount", SELF_VAR("DroneGrenList")] RLOG
         if (isNil "_droneGrenList") exitWith {0};
         (_droneGrenList getOrDefault [_this, createHashMap]) getOrDefault ["Amount", 0];
     }; 
+
+    PUBLIC FUNCTION("string", "grenadeAvailable") {
+        if (_this == "") exitWith {false};
+
+        private _drone = SELF_VAR("Drone");
+        private _amount = MEMBER("getGrenAmount", _this);
+
+        ["grenadeAvailable", _this, _amount, ((isNil "_amount") || {_amount <= 0})] RLOG;
+
+        if ((isNil "_amount") || {_amount <= 0}) exitWith {
+            false
+        };
+
+        true
+    };
 
 ENDCLASS;

@@ -7,6 +7,10 @@
         All methods and class handling is local
 */
 
+#define IS_MENU_ACTIVE "_target getVariable ['DGM_IsMenuActive', false]"
+#define IS_CONTROLLING_DRONE_CODE ((vehicle (remoteControlled player)) isEqualTo _target)
+#define IS_CONTROLLING_DRONE STR(IS_CONTROLLING_DRONE_CODE)
+
 
 CLASS("OO_DROP_MENU") // IOO_DROP_MENU
 
@@ -54,7 +58,9 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
                 _arguments params ["_menuInstance"];
                 METHOD(_menuInstance, "SetMenuActive", true);
             },
-            [_instance]
+            [_instance],
+            format["!(%1) && !(%2)", IS_MENU_ACTIVE, IS_CONTROLLING_DRONE],
+            5
         ];
         MEMBER("addAction", _arg);
     };
@@ -69,7 +75,9 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
                 _arguments params ["_menuInstance"];
                 METHOD(_menuInstance, "SetMenuActive", false);
             },
-            [_instance]
+            [_instance],
+            format["(%1) && !(%2)", IS_MENU_ACTIVE, IS_CONTROLLING_DRONE],
+            5
         ];
         MEMBER("addAction", _arg);
     };
@@ -78,9 +86,10 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
     
     // Attach Action
     // AttachId
-    PUBLIC FUNCTION("string", "addActionAttach") {
-        PR _itemAmount = 1;
-        PR _itemName = ITEM_NAME(_this);
+    PUBLIC FUNCTION("array", "addActionAttach") {
+        params["_itemClass", "_itemAmount"];
+
+        PR _itemName = ITEM_NAME(_itemClass);
         PR _arg = [
             "AttachId",
             TXT_ATTACH,
@@ -89,8 +98,10 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
                 _arguments params ["_grenClass"];
                 ["DGM_attachGrenEvent", [_target, _grenClass, _caller]] call CBA_fnc_globalEvent;
             },
-            [_this],
-            _this
+            [_itemClass],
+            format["(%1) && !(%2)", IS_MENU_ACTIVE, IS_CONTROLLING_DRONE],
+            2,
+            _itemClass
         ];
         MEMBER("addAction", _arg);
     };
@@ -109,6 +120,8 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
                 ["DGM_detachGrenEvent", [_target, _grenClass, _caller]] call CBA_fnc_globalEvent;
             },
             [_this],
+            format["(%1) && !(%2)", IS_MENU_ACTIVE, IS_CONTROLLING_DRONE],
+            4,
             _this
         ];
         MEMBER("addAction", _arg);
@@ -125,9 +138,11 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
             {
                 params ["_target", "_caller", "_actionId", "_arguments"];
                 _arguments params ["_grenClass"];
-                ["DGM_dropGrenEvent", [_target, _grenClass, _caller]] call CBA_fnc_globalEvent;
+                ["DGM_dropGrenEvent", [_target, _grenClass, remoteControlled _caller]] call CBA_fnc_globalEvent;
             },
             [_this],
+            format["(%1)", IS_CONTROLLING_DRONE],
+            3,
             _this
         ];
         MEMBER("addAction", _arg);
@@ -135,11 +150,10 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
 
     PUBLIC FUNCTION("array", "addAction") {
         ["addAction"] RLOG;
-        params[["_type", "", [""]], ["_name", "", [""]], ["_code", {}, [{}]], ["_arguments", [], [[]]], ["_condition", "", [""]], ["_itemClass", "", [""]]];
+        params[["_type", "", [""]], ["_name", "", [""]], ["_code", {}, [{}]], ["_arguments", [], [[]]], ["_condition", "", [""]], ["_priority", 2, [0]], ["_itemClass", "", [""]]];
 
-        ARGS [_type, _itemClass];
-        if (MEMBER("actionsExists", _args)) exitWith {
-            MEMBER("modifyAction", _itemClass)
+        if (MEMBER("actionsExists", [_type C _itemClass])) exitWith {
+            MEMBER("modifyActions", _itemClass)
         };
 
         PR _drone = SELF_VAR("Drone");
@@ -152,22 +166,11 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
             _name,
             _code,
             _arguments,
-            1.5,
+            _priority,
             true,
             false,
             "",
-            format[
-                "(%1) && {%2}",
-                format[
-                    if (_type == "MenuAction") then {"!(%1)"} else {"%1"}, 
-                    "_target getVariable ['DGM_IsMenuActive', false]"
-                ],
-                format[
-                    if (_type == "DropId") then {"%1"} else {"!(%1)"}, 
-                    "(vehicle (remoteControlled player)) isEqualTo _target"
-                ],
-                "_caller in (_target getVariable ['MENU_ALLOWED_USER_VAR', []])"
-            ],
+            _condition,
             2
         ];
         if (_itemClass != "") then {
@@ -193,19 +196,15 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
 
         ["removeGrenActions", _this, _grenActions] RLOG
 
-        if (MEMBER("actionsExists", ["DetachId" C _this])) then {
-            MEMBER("modifyAction", _this)
+        if (MEMBER("grenadeAvailable", _this)) then {
+            MEMBER("modifyActions", _this)
         } else {
             MEMBER("removeAction", _grenActions getOrDefault ["DetachId" C -1]);
             _grenActions set ["DetachId", -1];
-            SELF_VAR("Actions") set [_this, _grenActions];
-        };
 
-        if (MEMBER("actionsExists", ["DropId" C _this])) then {
-            MEMBER("modifyAction", _this)
-        } else {
             MEMBER("removeAction", _grenActions getOrDefault ["DropId" C -1]);
             _grenActions set ["DropId", -1];
+
             SELF_VAR("Actions") set [_this, _grenActions];
         };
     };
@@ -218,25 +217,29 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
         ["SetMenuActive", _this] RLOG
         MEMBER("IsMenuActive", _this);
         SELF_VAR("Drone") setVariable ["DGM_IsMenuActive", _this];
+
         if (_this) then {
             MEMBER("LoadGrensMenu", nil);
 
             PR _this = [SELF_VAR("Drone"), _instance];
             ENSURE_SPAWN_ONCE_START
                 ["Keep menu opened"] RLOG
-                params ["_drone", "_menuInstance"];
+                params ["_target", "_menuInstance"];
                 PR _inventoryDisplay = 602;
                 waitUntil { 
                     uiSleep 0.1;
-                    !(_drone getVariable ["DGM_IsMenuActive", false]) || 
-                    ((_drone distance player) > 3) || 
-                    (!(isNull (findDisplay _inventoryDisplay)))
+                    !(_target getVariable ["DGM_IsMenuActive", false]) || 
+                    ((_target distance player) > 3) || 
+                    (!(isNull (findDisplay _inventoryDisplay))) ||
+                    (IS_CONTROLLING_DRONE_CODE)
                 };
-                if (_drone getVariable ["DGM_IsMenuActive", false]) then {  
+                if (_target getVariable ["DGM_IsMenuActive", false]) then {  
                     METHOD(_menuInstance, "SetMenuActive", false);
                 };
                 ["Force close menu"] RLOG
             ENSURE_SPAWN_ONCE_END
+        } else {
+            DGM_currentGrenadesListCounts = nil;
         };
     };
 
@@ -245,21 +248,27 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
         MEMBER("SetMenuActive", SELF_VAR("IsMenuActive"));
     };
 
+    PRIVATE FUNCTION("string", "grenadeAvailable") {
+        private _drone = SELF_VAR("Drone");
+	    private _deviceInst = _drone GV ["DGM_deviceInstance", {}];
+        
+        METHOD(_deviceInst, "grenadeAvailable", _this);
+    };
+
     PRIVATE FUNCTION("array", "actionsExists") {
-        params[["_name", "", [""]], ["_itemClass", "", [""]]];
+        params[["_type", "", [""]], ["_itemClass", "", [""]]];
 
-        if ((_itemClass == "") || (_name == "")) exitWith {false};
-
+        if ((_itemClass == "") || (_type == "")) exitWith {false};
 
         PR _grenActions = SELF_VAR("Actions") get _itemClass;
         if (isNil "_grenActions") exitWith {false};
-        ["actionsExists", _name, _itemClass, !((_grenActions getOrDefault [_name, -1]) == -1)] RLOG;
-        if ((_grenActions getOrDefault [_name, -1]) == -1) exitWith {false};
+        ["actionsExists", _type, _itemClass, !((_grenActions getOrDefault [_type, -1]) == -1)] RLOG;
+        if ((_grenActions getOrDefault [_type, -1]) == -1) exitWith {false};
 
         true
     };
 
-    PRIVATE FUNCTION("string", "modifyAction") {
+    PRIVATE FUNCTION("string", "modifyActions") {
         private _itemClass = _this;
         private _itemName = ITEM_NAME(_this);
 
@@ -268,18 +277,22 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
         private _amount = METHOD(_deviceInst, "getGrenAmount", _itemClass);
         private _actionsHash = SELF_VAR("Actions") get _itemClass;
 
-        ["modifyAction", _this, _amount, !((isNil "_actionsHash") || (isNil "_amount") || {_amount <= 0})] RLOG
+        ["modifyActions", _this, _amount] RLOG
 
-        if ((isNil "_actionsHash") || (isNil "_amount") || {_amount <= 0}) exitWith {
-            MEMBER("removeGrenActions", _itemClass);
-            false
-        };
+        if (isNil "_actionsHash") exitWith {false};
 
         PR _itemAmount = _amount;
 
         _drone setUserActionText [_actionsHash getOrDefault ["DetachId", -1], TXT_DETACH];
         _drone setUserActionText [_actionsHash getOrDefault ["DropId", -1], TXT_DROP];
-        ["SET modifyAction", _actionsHash getOrDefault ["DetachId", -1], _actionsHash getOrDefault ["DropId", -1], TXT_DETACH, TXT_DROP] RLOG
+        ["SET modifyActions", _actionsHash getOrDefault ["DetachId", -1], _actionsHash getOrDefault ["DropId", -1], TXT_DETACH, TXT_DROP] RLOG
+        
+        ["GET PLAYER GREN AMOUNT modifyActions", _itemClass, (MGVAR ["DGM_currentGrenadesListCounts", createHashMap]) get _itemClass, (MGVAR ["DGM_currentGrenadesListCounts", createHashMap])] RLOG
+        _itemAmount = (MGVAR ["DGM_currentGrenadesListCounts", createHashMap]) get _itemClass;
+        if !(isNil "_itemAmount") then {
+            _drone setUserActionText [_actionsHash getOrDefault ["AttachId", -1], TXT_ATTACH];
+            ["SET ATTACH ID modifyActions", _itemAmount, _actionsHash getOrDefault ["AttachId", -1], TXT_ATTACH] RLOG
+        };
 
         true
     };
@@ -299,9 +312,14 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
                 MEMBER("CloseAction", _id);
             };
             default {
+                // get variables
                 PR _actions = SELF_VAR("Actions");
                 PR _grenHash = _actions getOrDefault [_itemClass, createHashMap];
+
+                // set
                 _grenHash set [_name, _id];
+
+                // save
                 _actions set [_itemClass, _grenHash];
                 MEMBER("Actions", _actions);
             };
@@ -311,13 +329,24 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
     };
 
     PRIVATE FUNCTION("any", "LoadGrensMenu") {
+        // Load attach actions 
+
+        DGM_currentGrenadesListCounts = nil;
+
 	    PR _drone = SELF_VAR("Drone");
 	    PR _deviceInst = _drone GV ["DGM_deviceInstance", {}];
 	    PR _actions = SELF_VAR("Actions");
 	    PR _currentMenuGrenades = keys _actions;
-        PR _playerGrens = (itemsWithMagazines player) arrayIntersect INSTANCE_VAR(_deviceInst, "AllowedGrenList");
 
-        if (isNil "_playerGrens") exitWith {};
+        PR _playerGrens = createHashMap;
+        PR _playerMags = (itemsWithMagazines player);
+        PR _allowedgrens = INSTANCE_VAR(_deviceInst, "AllowedGrenList");
+
+        {
+            PR _el = _x;
+            if !(_el in _allowedgrens) then {SKIP};
+            _playerGrens set [_el, ({_el == _x} count _playerMags), true];
+        } forEach _playerMags;
 
         ["LoadGrensMenu", _playerGrens] RLOG
 
@@ -325,14 +354,17 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
             hint LBL_DONT_HAVE_GRENS;
         };
 
+        DGM_currentGrenadesListCounts =  _playerGrens;
+
         {
-            MEMBER("addActionAttach", _x);
+            MEMBER("addActionAttach", [_x C _y]);
         } forEach _playerGrens;
 
         (_currentMenuGrenades select {!(_x in _playerGrens)}) apply {
             PR _grenActions = MEMBER("getGrenActions", _x); 
             MEMBER("removeAction", _grenActions getOrDefault ["AttachId" C -1]);
         };
+
         _playerGrens
     };
 

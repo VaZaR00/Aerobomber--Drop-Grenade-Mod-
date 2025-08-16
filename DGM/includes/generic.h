@@ -7,8 +7,8 @@
 #define MGVAR MN GV
 #define MSVAR MN SV
 #define LOG hint str 
-#define RLOG call {_txt = format["%3 :: %2 : %1", _this, if (isServer) then {"SERVER"} else {clientOwner}, __FILE_SHORT__]; hint _txt; diag_log _txt};
-#define MP_RLOG call {(format["%3 :: ID %1 : %2", if (isServer) then {"SERVER"} else {clientOwner}, _this, __FILE_SHORT__]) remoteExec ["diag_log", 0]; (format["ID %1 : %2", clientOwner, _this]) remoteExec ["hint", 0];};
+#define RLOG call {_txt = format["%3%4 :: %2 : %1", _this, if (isServer) then {"SERVER"} else {clientOwner}, __FILE_SHORT__, if !(isNil "_member") then {format[".%1", _member]} else {""}]; hint _txt; diag_log _txt};
+#define MP_RLOG call {(format["%3%4 :: ID %1 : %2", if (isServer) then {"SERVER"} else {clientOwner}, _this, __FILE_SHORT__, if !(isNil "_member") then {format[".%1", _member]} else {""}]) remoteExec ["diag_log", 0]; (format["ID %1 : %2", clientOwner, _this]) remoteExec ["hint", 0];};
 #define NLOG ;
 #define IFLOG call {if (MGVAR ["TEMP_DO_LOG", false]) then {hint str _this; diag_log str _this}};
 #define DOLOG MSVAR ["TEMP_DO_LOG", true];
@@ -53,7 +53,8 @@
 #define IS_LOCAL(o) ((IS_OBJ(o) && {local o}) || isServer)
 #define STR_EMPTY(s) (s isEqualTo "")
 #define ARR_EMPTY(a) (count a == 0)
-// #define REB_itemRebsClasses (keys REB_all_classes)
+#define LWR(s) (toLower s)
+
 #define ARGS PR _args = 
 
 #define ABSOLUTE_RANDOM_NUM (round (((random 2) * 100000) + (systemTimeUTC select -1)))
