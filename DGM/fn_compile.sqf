@@ -4,7 +4,6 @@
 
 FUNC(attachGrenEvent) = {
 	_this spawn {
-		["attachGrenEvent", _this] RLOG
 		params["_drone", "_grenClass", ["_caller", objNull], ["_num", 1], ["_currentCount", -1]];
 
 		WAIT_SCRIPT_END(DGM_attachGrenEvent);
@@ -27,7 +26,6 @@ FUNC(attachGrenEvent) = {
 
 		// wait until amount updated globaly
 		waitUntil { (METHOD(_deviceInst, "getGrenAmount", _grenClass)) != _currentCount };
-		["attachGrenEvent 1"] RLOG
 		
 		FOR_I(_num) {
 			METHOD(_menuInst, "addActionDrop", _grenClass);
@@ -38,7 +36,6 @@ FUNC(attachGrenEvent) = {
 };
 FUNC(detachGrenEvent) = {
 	_this spawn {
-		["detachGrenEvent", _this] RLOG
 		WAIT_SCRIPT_END(DGM_detachGrenEvent);
 
 		params["_drone", "_grenClass", ["_caller", player, [player]], ["_currentCount", -1]];
@@ -55,15 +52,13 @@ FUNC(detachGrenEvent) = {
 
 		// wait until amount updated globaly
 		waitUntil { (METHOD(_deviceInst, "getGrenAmount", _grenClass)) != _currentCount };
-		["detachGrenEvent 1"] RLOG
-		
+	
 		METHOD(_menuInst, "removeGrenActions", _grenClass);
 		METHOD(_menuInst, "UpdateMenu", nil);
 	};
 };
 FUNC(dropGrenEvent) = {
 	_this spawn {
-		["dropGrenEvent", _this] RLOG
 		WAIT_SCRIPT_END(DGM_dropGrenEvent);
 
 		params["_drone", "_grenClass", ["_caller", player, [player]], ["_currentCount", -1]];
@@ -80,7 +75,6 @@ FUNC(dropGrenEvent) = {
 
 		// wait until amount updated globaly
 		waitUntil { (METHOD(_deviceInst, "getGrenAmount", _grenClass)) != _currentCount };
-		["dropGrenEvent 1"] RLOG
 
 		METHOD(_menuInst, "removeGrenActions", _grenClass);
 		METHOD(_menuInst, "UpdateMenu", nil);

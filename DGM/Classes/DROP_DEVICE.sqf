@@ -257,7 +257,6 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
         PR _tempGren = SELF_VAR("TempAttachedGren");
 
         // delete temp object
-        [_grenClass, SELF_VAR("Drone") GV ["DGM_tempGrenClassname", ""], _tempGren, _grenAmount] RLOG
         if ((_grenClass == (SELF_VAR("Drone") GV ["DGM_tempGrenClassname", ""])) && (_grenAmount == 0)) then {
             MEMBER("DeleteAttachedGren", nil);
         };
@@ -347,8 +346,6 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
         PR _gren = createSimpleObject [_itemModel, [0,0,0]];
         _gren attachTo [_drone, [0,0,_zOffset]];
 
-        [_item, _gren] RLOG
-
         MEMBER_GLOBAL("TempAttachedGren", _gren);
         _drone setVariable ["DGM_TempAttachedGren", _gren, true];
         _drone setVariable ["DGM_tempGrenClassname", _item, true];
@@ -358,13 +355,10 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
 
     PUBLIC FUNCTION("ANY", "DeleteAttachedGren") {
         PR _tempGren = SELF_VAR("TempAttachedGren");
-        [_tempGren] RLOG
 
         if (_tempGren isEqualTo objNull) EX;
 
         PR _drone = SELF_VAR("Drone");
-
-        [_drone, _tempGren] RLOG
 
         deleteVehicle _tempGren;
 
@@ -381,7 +375,6 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
     PUBLIC FUNCTION("string", "getGrenAmount") {
         private _droneGrenList = SELF_VAR("DroneGrenList");
         if (isNil "_droneGrenList") exitWith {0};
-        [_this, (_droneGrenList getOrDefault [_this, createHashMap]) getOrDefault ["Amount", 0]] RLOG
         (_droneGrenList getOrDefault [_this, createHashMap]) getOrDefault ["Amount", 0];
     }; 
 
@@ -390,7 +383,6 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
 
         private _drone = SELF_VAR("Drone");
         private _amount = MEMBER("getGrenAmount", _this);
-        [_this, _amount] RLOG
 
         if ((isNil "_amount") || {_amount <= 0}) exitWith {
             false
