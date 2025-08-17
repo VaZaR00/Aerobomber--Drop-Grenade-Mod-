@@ -80,7 +80,7 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
         MEMBER("DefineAllowedGrens", nil);
 
         if (_spawnWithGren && (local _drone)) then {
-            if (_spawnTempGren) then {
+            if (_spawnTempGren && {!(_addedItems isEqualTo [])}) then {
                 MEMBER("SpawnAttachedGren", _addedItems select 0);
             };
             ["DGM_attachGrenEvent", [_drone, (_addedItems#0), objNull, _slotNum, 0]] call CBA_fnc_globalEvent;

@@ -38,8 +38,8 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
         MEMBER("AllActions", []);
         MEMBER("IsMenuActive", false);
 
-        MEMBER("addActionMenu", []);
-        MEMBER("addActionClose", []);
+        MEMBER("addActionMenu", nil);
+        MEMBER("addActionClose", nil);
 
 		_drone setVariable ["DGM_menuInstance", _instance];
     };
@@ -258,21 +258,21 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
         MEMBER("SetMenuActive", SELF_VAR("IsMenuActive"));
     };
 
-    PRIVATE FUNCTION("string", "grenadeAvailable") {
+    PUBLIC FUNCTION("string", "grenadeAvailable") {
         private _drone = SELF_VAR("Drone");
 	    private _deviceInst = _drone GV ["DGM_deviceInstance", {}];
         
         METHOD(_deviceInst, "grenadeAvailable", _this);
     };
 
-    PRIVATE FUNCTION("string", "getGrenAmount") {
+    PUBLIC FUNCTION("string", "getGrenAmount") {
         private _drone = SELF_VAR("Drone");
 	    private _deviceInst = _drone GV ["DGM_deviceInstance", {}];
         
         METHOD(_deviceInst, "getGrenAmount", _this);
     };
 
-    PRIVATE FUNCTION("array", "actionsExists") {
+    PUBLIC FUNCTION("array", "actionsExists") {
         params[["_type", "", [""]], ["_itemClass", "", [""]]];
 
         if ((_itemClass == "") || (_type == "")) exitWith {false};
@@ -285,7 +285,7 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
         true
     };
 
-    PRIVATE FUNCTION("string", "modifyActions") {
+    PUBLIC FUNCTION("string", "modifyActions") {
         private _itemClass = _this;
         private _itemName = ITEM_NAME(_this);
 
@@ -308,7 +308,7 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
         true
     };
 
-    PRIVATE FUNCTION("array", "addActionId") {
+    PUBLIC FUNCTION("array", "addActionId") {
         params[["_itemClass", "", [""]], ["_name", "", [""]], ["_id", -1, [0]]];
 
         if ((_id == -1) || (_name == "")) EX;
@@ -337,7 +337,7 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
         SELF_VAR("AllActions") pushBack _id;
     };
 
-    PRIVATE FUNCTION("any", "LoadGrensMenu") {
+    PUBLIC FUNCTION("any", "LoadGrensMenu") {
         // Load attach actions 
 
         DGM_currentGrenadesListCounts = nil;
