@@ -343,7 +343,6 @@ Multiplayer implementation by Vazar
 #define GLOBALY PR TARGET_VAR = 0;
 
 #define REMOTE_CALLCLASS(className,member,args,access) \
-	["MEMBER_GLOBAL", className,member,args,access,_classID,TARGET_VAR, DO_JIP, GETCLASS(className)] MP_RLOG; \
 	(if(isNil "_oopOriginCall")then{ \
 		[[className, [_classID, member, SAFE_VAR(args),access]], {(_this select 1) call GETCLASS((_this select 0))}] remoteExecCall ["call", TARGET_VAR, DO_JIP]  \
 	}else{  \
@@ -351,7 +350,7 @@ Multiplayer implementation by Vazar
 	})
 
 #define MEMBER_GLOBAL(memberStr,args) REMOTE_CALLCLASS(_class,memberStr,args,2)
-#define METHOD_GLOBAL(object, method, args) ["METHOD_GLOBAL", object, method, args, TARGET_VAR, DO_JIP] MP_RLOG; ([[method, args], object] remoteExec ["call", TARGET_VAR, DO_JIP])
+#define METHOD_GLOBAL(object, method, args) ([[method, args], object] remoteExec ["call", TARGET_VAR, DO_JIP])
 
 #define MEMBER_TARGET(memberStr,args,targ) SET_TARGET(targ); MEMBER_GLOBAL(memberStr,args); GLOBALY;
 #define METHOD_TARGET(memberStr,args,targ) SET_TARGET(targ); METHOD_GLOBAL(memberStr,args); GLOBALY;

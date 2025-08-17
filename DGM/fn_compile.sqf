@@ -6,9 +6,7 @@ FUNC(attachGrenEvent) = {
 	_this spawn {
 		params["_drone", "_grenClass", ["_caller", objNull], ["_num", 1]];
 
-		["WAIT END attachGrenEvent", _this] MP_RLOG;
 		WAIT_SCRIPT_END(DGM_attachGrenEvent);
-		["attachGrenEvent", _drone] MP_RLOG;
 
 		// on mission init its better to wait until device instance created
 		// because server may do it faster and trigger event before instance created localy
@@ -27,11 +25,8 @@ FUNC(attachGrenEvent) = {
 			};
 		};
 
-		["attachGrenEvent WAIT", _drone, if !(isNil "_currentAmount") then {_currentAmount}, METHOD(_deviceInst, "getGrenAmount", _grenClass)] MP_RLOG;
 		// wait until amount updated globaly
 		waitUntil { !(isNil "_currentAmount") && {(METHOD(_deviceInst, "getGrenAmount", _grenClass) != _currentAmount)} };
-
-		["attachGrenEvent WAITED", _drone, _grenClass, _currentAmount] MP_RLOG;
 
 		FOR_I(_num) {
 			METHOD(_menuInst, "addActionDrop", _grenClass);
@@ -44,7 +39,6 @@ FUNC(detachGrenEvent) = {
 	_this spawn {
 		WAIT_SCRIPT_END(DGM_detachGrenEvent);
 
-		["detachGrenEvent", _this] MP_RLOG;
 		params["_drone", "_grenClass", ["_caller", player, [player]]];
 
 		PR _deviceInst = _drone GV ["DGM_deviceInstance", {}];
@@ -69,7 +63,6 @@ FUNC(dropGrenEvent) = {
 	_this spawn {
 		WAIT_SCRIPT_END(DGM_dropGrenEvent);
 
-		["dropGrenEvent", _this] MP_RLOG;
 		params["_drone", "_grenClass", ["_caller", player, [player]]];
 
 		PR _deviceInst = _drone GV ["DGM_deviceInstance", {}];

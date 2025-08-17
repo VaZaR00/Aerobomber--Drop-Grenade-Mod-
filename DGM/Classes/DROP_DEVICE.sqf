@@ -43,8 +43,6 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
             ["_removeSmokes", D_GET_VAR("remove_smokes", true)]
         ];
 
-        _this MP_RLOG;
-
         _addedItems = _addedItems splitString ";,: ";
 
 		_drone setVariable ["DGM_deviceInstance", _instance];
@@ -218,8 +216,6 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
         private _info = MEMBER("getGrenadeData", _grenClass);
         private _num = _info getOrDefault ["Amount", 0];
 	    
-        [_this, _num, _info, _droneGrenList] MP_RLOG;
-
         _info set ["Amount", _num + _amount];
         _droneGrenList set [_grenClass, _info];
 
@@ -240,8 +236,6 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
         private _droneGrenList = SELF_VAR("DroneGrenList");
         private _info = MEMBER("getGrenadeData", _grenClass);
         private _num = _info getOrDefault ["Amount", 0];
-
-        [_this, _num, _info, _droneGrenList] MP_RLOG;
 
         if (_num <= _amount) then {
             _droneGrenList deleteAt _grenClass;

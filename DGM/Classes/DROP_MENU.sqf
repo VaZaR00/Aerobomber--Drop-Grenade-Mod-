@@ -27,8 +27,6 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
         params [
             "_drone"
         ];
-        
-        _this MP_RLOG;
 
         MEMBER("Drone", _drone);
         MEMBER("Actions", createHashMap);
