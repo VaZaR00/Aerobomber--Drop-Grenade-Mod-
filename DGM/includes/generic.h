@@ -7,8 +7,8 @@
 #define MGVAR MN GV
 #define MSVAR MN SV
 #define LOG hint str 
-#define RLOG call {_txt = format["%3%4 :: %2 : %1", _this, if (isServer) then {"SERVER"} else {clientOwner}, __FILE_SHORT__, if !(isNil "_member") then {format[".%1", _member]} else {""}]; hint _txt; diag_log _txt};
-#define MP_RLOG call {(format["%3%4 :: ID %1 : %2", if (isServer) then {"SERVER"} else {clientOwner}, _this, __FILE_SHORT__, if !(isNil "_member") then {format[".%1", _member]} else {""}]) remoteExec ["diag_log", 0]; (format["ID %1 : %2", clientOwner, _this]) remoteExec ["hint", 0];};
+#define RLOG call {_txt = text format["[RLOG]  %3%4 :: %2 :: %1", _this, serverTime, __FILE_SHORT__, if !(isNil "_member") then {format[".%1", _member]} else {""}]; hint _txt; diag_log _txt};
+#define MP_RLOG call {_txt = (format["%3%4 :: %1 :: %2", serverTime, _this, __FILE_SHORT__, if !(isNil "_member") then {format[".%1", _member]} else {""}]); _txtR = format["[MP_RLOG]  {FROM %1} :: %2", if (isServer) then {"SERVER"} else {clientOwner}, _txt]; _txtR remoteExec ["diag_log", -clientOwner]; _txtR remoteExec ["hint", -clientOwner]; _txt = text format["[MP_RLOG]  %1", _txt]; hint _txt; diag_log _txt};
 #define NLOG ;
 #define IFLOG call {if (MGVAR ["TEMP_DO_LOG", false]) then {hint str _this; diag_log str _this}};
 #define DOLOG MSVAR ["TEMP_DO_LOG", true];
@@ -49,11 +49,12 @@
 #define IS_BOOL(s) (s isEqualType true)
 #define IS_CODE(s) (s isEqualType {})
 #define IS_INT(s) (s isEqualType 0)
-#define IS_REB(r) (r call REB_fnc_isReb)
+#define IS_REB(r) (r call TEMP_fnc_isReb)
 #define IS_LOCAL(o) ((IS_OBJ(o) && {local o}) || isServer)
 #define STR_EMPTY(s) (s isEqualTo "")
 #define ARR_EMPTY(a) (count a == 0)
 #define LWR(s) (toLower s)
+#define FOR_I(n) for "_i" from 0 to (n - 1) do
 
 #define ARGS PR _args = 
 
@@ -94,8 +95,12 @@
 #define SPAWN_NWAIT(c) PR _thndl = [] spawn c; waitUntil {scriptDone _thndl}; _thndl = nil;
 #define SPAWNF_NWAIT(a, f) PR _thndl = a spawn f; waitUntil {scriptDone _thndl}; _thndl = nil;
 #define WAIT_THIS_SCRIPT \
-    waitUntil { scriptDone (missionNamespace getVariable ["REB_TEMP_HNDL_" + THIS_FUNC_NAME, scriptNull]) }; \
-	missionNamespace setVariable ["REB_TEMP_HNDL_" + THIS_FUNC_NAME, _thisScript]; \
+    waitUntil { scriptDone (missionNamespace getVariable ["TEMP_TEMP_HNDL_" + THIS_FUNC_NAME, scriptNull]) }; \
+	missionNamespace setVariable ["TEMP_TEMP_HNDL_" + THIS_FUNC_NAME, _thisScript];
+
+#define WAIT_SCRIPT_END(script) \
+    waitUntil { scriptDone (missionNamespace getVariable ["TEMP_TEMP_HNDL_" + #script, scriptNull]) }; \
+	missionNamespace setVariable ["TEMP_TEMP_HNDL_" + #script, _thisScript];
 
 #define WAITVAR(v) waitUntil { !ISNIL(v) };
 #define WAITSVAR(v) waitUntil { !isNil v };
@@ -110,13 +115,13 @@ if (!canSuspend) EW { \
 
 // for server execuiton
 #define EXEC_ON_SERVER_START PR _codeForServer = {
-#define EXEC_ON_SERVER_END }; if (isServer) then {_this call _codeForServer} else {[[_this], _codeForServer] remoteExec ["REB_fnc_remoteCall", 2]};
+#define EXEC_ON_SERVER_END }; if (isServer) then {_this call _codeForServer} else {[[_this], _codeForServer] remoteExec ["TEMP_fnc_remoteCall", 2]};
 #define EXEC_ON_SERVER_END_RESULT }; \
 PR _serverExecResult = if (isServer) then { \
 	_this call _codeForServer \
 } else { \
-    private _tempVarName = format ["REB_TEMP_remoteExec_result_%1", ABSOLUTE_RANDOM_NUM]; \
-    [[_this, clientOwner, _tempVarName], _codeForServer] remoteExec ["REB_fnc_remoteCall", 2]; \
+    private _tempVarName = format ["TEMP_TEMP_remoteExec_result_%1", ABSOLUTE_RANDOM_NUM]; \
+    [[_this, clientOwner, _tempVarName], _codeForServer] remoteExec ["call", 2]; \
     WAITSVAR(_tempVarName); \
     MGVAR _tempVarName; \
 }; \

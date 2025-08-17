@@ -17,6 +17,8 @@ PR _obj = _this select 0;
 
 if ((isNil "_obj") || {!(_obj isEqualType objNull) || (_obj isEqualTo objNull)}) exitWith {};
 
+_this MP_RLOG;
+
 PR _deviceInstance = NEW(OO_DROP_DEVICE, _this);
 
 _deviceInstance

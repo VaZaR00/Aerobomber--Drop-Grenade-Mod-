@@ -43,6 +43,8 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
             ["_removeSmokes", D_GET_VAR("remove_smokes", true)]
         ];
 
+        _this MP_RLOG;
+
         _addedItems = _addedItems splitString ";,: ";
 
 		_drone setVariable ["DGM_deviceInstance", _instance];
@@ -77,9 +79,7 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
 
         if (_spawnWithGren && (local _drone)) then {
             MEMBER("SpawnAttachedGren", _addedItems select 0);
-            for "_i" from 1 to _slotNum do {
-                ["DGM_attachGrenEvent", [_drone, (_addedItems#0), objNull]] call CBA_fnc_globalEvent;
-            };
+            ["DGM_attachGrenEvent", [_drone, (_addedItems#0), objNull, _slotNum]] call CBA_fnc_globalEvent;
         };
     };
 
@@ -217,6 +217,8 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
         private _droneGrenList = SELF_VAR("DroneGrenList");
         private _info = MEMBER("getGrenadeData", _grenClass);
         private _num = _info getOrDefault ["Amount", 0];
+	    
+        [_this, _num, _info, _droneGrenList] MP_RLOG;
 
         _info set ["Amount", _num + _amount];
         _droneGrenList set [_grenClass, _info];
@@ -238,6 +240,8 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
         private _droneGrenList = SELF_VAR("DroneGrenList");
         private _info = MEMBER("getGrenadeData", _grenClass);
         private _num = _info getOrDefault ["Amount", 0];
+
+        [_this, _num, _info, _droneGrenList] MP_RLOG;
 
         if (_num <= _amount) then {
             _droneGrenList deleteAt _grenClass;
@@ -268,6 +272,7 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
         PR _item = _this;
 
         ITEM_DATA(_item);
+        
 
         if ("mavik" in (typeOf _drone)) then {
             [missionNamespace, "DB_mavic_showMessage", []] call BIS_fnc_callScriptedEventHandler;

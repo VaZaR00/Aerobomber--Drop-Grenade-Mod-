@@ -4,7 +4,7 @@
     Класс: OO_DROP_MENU
 
     Description:
-        All methods and class handling is local
+        All methods and class handling is LOCAL
 */
 
 #define IS_MENU_ACTIVE "_target getVariable ['DGM_IsMenuActive', false]"
@@ -12,7 +12,7 @@
 #define IS_CONTROLLING_DRONE STR(IS_CONTROLLING_DRONE_CODE)
 #define SLOTS_AVAILABLE_CODE ((_target GV [CURR_SLOTS, 0]) < (_target GV [MAX_SLOTS, 0]))
 
-
+// LOCAL
 CLASS("OO_DROP_MENU") // IOO_DROP_MENU
 
     PUBLIC VARIABLE("object", "Drone");              // дрон
@@ -27,6 +27,8 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
         params [
             "_drone"
         ];
+        
+        _this MP_RLOG;
 
         MEMBER("Drone", _drone);
         MEMBER("Actions", createHashMap);
@@ -354,3 +356,4 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
     };
 
 ENDCLASS;
+

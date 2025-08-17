@@ -1,5 +1,8 @@
 /*
 	Name: DGM_fnc_setSlotsNumber
+
+	Example: 
+		[this, 1] call DGM_fnc_setSlotsNumber;
 */
 
 #include "includes\defines.h"

@@ -1,6 +1,9 @@
 #include "generic.h"
 #include "oop.h"
 
+#define MP_RLOG ;
+#define RLOG ;
+
 #define PREFX DGM
 #define PREF_FNC PREFX##_fnc_
 #define PREF_VAR PREFX##_var_
