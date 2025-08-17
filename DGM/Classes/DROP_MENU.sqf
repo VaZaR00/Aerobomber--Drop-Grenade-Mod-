@@ -28,6 +28,11 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
             "_drone"
         ];
 
+        if !(hasInterface) exitWith {
+		    _drone setVariable ["DGM_menuInstance", {}];
+            {}
+        };
+
         MEMBER("Drone", _drone);
         MEMBER("Actions", createHashMap);
         MEMBER("AllActions", []);
@@ -100,7 +105,10 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
                     SHOW_HINT LBL_CANT_ADD_MORE_GREN;
                 };
 
-                ["DGM_attachGrenEvent", [_target, _grenClass, _caller]] call CBA_fnc_globalEvent;
+		        PR _deviceInst = _target GV ["DGM_deviceInstance", {}];
+                PR _currentCount = METHOD(_deviceInst, "getGrenAmount", _grenClass);
+
+                ["DGM_attachGrenEvent", [_target, _grenClass, _caller, 1, _currentCount]] call CBA_fnc_globalEvent;
             },
             [_itemClass],
             format["(%1) && !(%2) && (call %3)", IS_MENU_ACTIVE, IS_CONTROLLING_DRONE, {SLOTS_AVAILABLE_CODE}],
@@ -121,7 +129,11 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
             {
                 params ["_target", "_caller", "_actionId", "_arguments"];
                 _arguments params ["_grenClass"];
-                ["DGM_detachGrenEvent", [_target, _grenClass, _caller]] call CBA_fnc_globalEvent;
+
+		        PR _deviceInst = _target GV ["DGM_deviceInstance", {}];
+                PR _currentCount = METHOD(_deviceInst, "getGrenAmount", _grenClass);
+
+                ["DGM_detachGrenEvent", [_target, _grenClass, _caller, _currentCount]] call CBA_fnc_globalEvent;
             },
             [_this],
             format["(%1) && !(%2)", IS_MENU_ACTIVE, IS_CONTROLLING_DRONE],
@@ -142,7 +154,11 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
             {
                 params ["_target", "_caller", "_actionId", "_arguments"];
                 _arguments params ["_grenClass"];
-                ["DGM_dropGrenEvent", [_target, _grenClass, remoteControlled _caller]] call CBA_fnc_globalEvent;
+
+		        PR _deviceInst = _target GV ["DGM_deviceInstance", {}];
+                PR _currentCount = METHOD(_deviceInst, "getGrenAmount", _grenClass);
+
+                ["DGM_dropGrenEvent", [_target, _grenClass, remoteControlled _caller, _currentCount]] call CBA_fnc_globalEvent;
             },
             [_this],
             format["(%1)", IS_CONTROLLING_DRONE],
@@ -154,6 +170,7 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
 
     PUBLIC FUNCTION("array", "addAction") {
         params[["_type", "", [""]], ["_name", "", [""]], ["_code", {}, [{}]], ["_arguments", [], [[]]], ["_condition", "", [""]], ["_priority", 2, [0]], ["_itemClass", "", [""]]];
+        [_type, _name, _itemClass] RLOG;
 
         if (MEMBER("actionsExists", [_type C _itemClass])) exitWith {
             MEMBER("modifyActions", _itemClass)
@@ -239,6 +256,7 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
     };
 
     PUBLIC FUNCTION("any", "UpdateMenu") {
+        "UPDATE" RLOG
         MEMBER("SetMenuActive", SELF_VAR("IsMenuActive"));
     };
 
@@ -277,6 +295,8 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
 
         _drone setUserActionText [_actionsHash getOrDefault ["DetachId", -1], TXT_DETACH];
         _drone setUserActionText [_actionsHash getOrDefault ["DropId", -1], TXT_DROP];
+
+        [_this, _itemAmount, TXT_DETACH, TXT_DROP] RLOG
         
         _itemAmount = (MGVAR ["DGM_currentGrenadesListCounts", createHashMap]) get _itemClass;
         if !(isNil "_itemAmount") then {

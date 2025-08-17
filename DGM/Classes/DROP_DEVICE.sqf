@@ -77,7 +77,7 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
 
         if (_spawnWithGren && (local _drone)) then {
             MEMBER("SpawnAttachedGren", _addedItems select 0);
-            ["DGM_attachGrenEvent", [_drone, (_addedItems#0), objNull, _slotNum]] call CBA_fnc_globalEvent;
+            ["DGM_attachGrenEvent", [_drone, (_addedItems#0), objNull, _slotNum, 0]] call CBA_fnc_globalEvent;
         };
     };
 
@@ -367,6 +367,7 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
     PUBLIC FUNCTION("string", "getGrenAmount") {
         private _droneGrenList = SELF_VAR("DroneGrenList");
         if (isNil "_droneGrenList") exitWith {0};
+        [_this, (_droneGrenList getOrDefault [_this, createHashMap]) getOrDefault ["Amount", 0]] RLOG
         (_droneGrenList getOrDefault [_this, createHashMap]) getOrDefault ["Amount", 0];
     }; 
 
@@ -375,6 +376,7 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
 
         private _drone = SELF_VAR("Drone");
         private _amount = MEMBER("getGrenAmount", _this);
+        [_this, _amount] RLOG
 
         if ((isNil "_amount") || {_amount <= 0}) exitWith {
             false
