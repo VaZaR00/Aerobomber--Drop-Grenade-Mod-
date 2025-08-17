@@ -267,6 +267,13 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
         METHOD(_deviceInst, "grenadeAvailable", _this);
     };
 
+    PRIVATE FUNCTION("string", "getGrenAmount") {
+        private _drone = SELF_VAR("Drone");
+	    private _deviceInst = _drone GV ["DGM_deviceInstance", {}];
+        
+        METHOD(_deviceInst, "getGrenAmount", _this);
+    };
+
     PRIVATE FUNCTION("array", "actionsExists") {
         params[["_type", "", [""]], ["_itemClass", "", [""]]];
 
@@ -285,8 +292,7 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
         private _itemName = ITEM_NAME(_this);
 
         private _drone = SELF_VAR("Drone");
-	    private _deviceInst = _drone GV ["DGM_deviceInstance", {}];
-        private _amount = METHOD(_deviceInst, "getGrenAmount", _itemClass);
+        private _amount = MEMBER("getGrenAmount", _itemClass);
         private _actionsHash = SELF_VAR("Actions") get _itemClass;
 
         if (isNil "_actionsHash") exitWith {false};

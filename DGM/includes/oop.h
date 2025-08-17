@@ -273,7 +273,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	if ((count _this) > 0) then { \
 		private _class = className; \
 		private _parentClass = parentClassName; \
-		private _oopRemoteTarget = 0; \
+		private _oopRemoteTarget = -clientOwner; \
 		if (isNil {_this select 0}) then {_this set [0,_class]}; \
 		switch (_this select 0) do { \
 		case "new": { \
@@ -340,7 +340,7 @@ Multiplayer implementation by Vazar
 #define DO_JIP (if (isNil "_oopRemoteJIP") then {false} else {_oopRemoteJIP})
 
 #define SET_TARGET(t) PR TARGET_VAR = t;
-#define GLOBALY PR TARGET_VAR = 0;
+#define GLOBALY PR TARGET_VAR = -clientOwner;
 
 #define REMOTE_CALLCLASS(className,member,args,access) \
 	(if(isNil "_oopOriginCall")then{ \
@@ -349,8 +349,8 @@ Multiplayer implementation by Vazar
 		[[_oopOriginCall, [_classID, member, SAFE_VAR(args),access]], {(_this select 1) call GETCLASS((_this select 0))}] remoteExecCall ["call", TARGET_VAR, DO_JIP] \
 	})
 
-#define MEMBER_GLOBAL(memberStr,args) REMOTE_CALLCLASS(_class,memberStr,args,2)
-#define METHOD_GLOBAL(object, method, args) ([[method, args], object] remoteExec ["call", TARGET_VAR, DO_JIP])
+#define MEMBER_GLOBAL(memberStr,args) MEMBER(memberStr,args); REMOTE_CALLCLASS(_class,memberStr,args,2)
+#define METHOD_GLOBAL(object, method, args) METHOD(object, method, args); ([[method, args], object] remoteExec ["call", TARGET_VAR, DO_JIP])
 
-#define MEMBER_TARGET(memberStr,args,targ) SET_TARGET(targ); MEMBER_GLOBAL(memberStr,args); GLOBALY;
-#define METHOD_TARGET(memberStr,args,targ) SET_TARGET(targ); METHOD_GLOBAL(memberStr,args); GLOBALY;
+#define MEMBER_TARGET(memberStr,args,targ) MEMBER(memberStr,args); SET_TARGET(targ); MEMBER_GLOBAL(memberStr,args); GLOBALY;
+#define METHOD_TARGET(object, method, args, targ) METHOD(object, method, args); SET_TARGET(targ); METHOD_GLOBAL(object, method, args); GLOBALY;
