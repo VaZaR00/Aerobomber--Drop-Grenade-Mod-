@@ -57,10 +57,10 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
         PR _menuInstance = NEW(OO_DROP_MENU, [_drone]);
         MEMBER("MenuInstance", _menuInstance);
 
-        _drone SV [SPREF("SlotNum"), _slotNum];
+        _drone SV [MAX_SLOTS, _slotNum];
 
         if (local _drone) then {
-            MEMBER("SlotNum", _slotNum);
+            MEMBER(MAX_SLOTS, _slotNum);
 
             if (_spawnWithGren) then {
                 if (_spawnTempGren && {!(_addedItems isEqualTo [])}) then {
@@ -82,14 +82,14 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
 
     // VARIABLE SETTERS
 
-    PUBLIC SETTER("scalar", "SlotsOccupied") {
+    PUBLIC SETTER("scalar", CURR_SLOTS) {
         PR _drone = SELF_VAR("Drone");
         IF_SET {
             RLOG
-            _drone SV [SPREF("SlotsOccupied"), _this, true];
+            _drone SV [CURR_SLOTS, _this, true];
         } 
         IF_GET {
-            _drone GV [SPREF("SlotsOccupied"), 0];
+            _drone GV [CURR_SLOTS, 0];
         }
     };
 
@@ -136,21 +136,21 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
         }
     };
 
-    PUBLIC SETTER("scalar", "SlotNum") {
+    PUBLIC SETTER("scalar", MAX_SLOTS) {
         PR _drone = SELF_VAR("Drone");
         IF_SET {
             RLOG
-            _drone SV [SPREF("SlotNum"), _this, true];
+            _drone SV [MAX_SLOTS, _this, true];
         } 
         IF_GET {
-            _drone GV [SPREF("SlotNum"), 1];
+            _drone GV [MAX_SLOTS, 1];
         }
     };
 
     // METHODS
 
     PUBLIC FUNCTION("ANY", "DefineAttachParams") {
-        PR _spwnDef = if (SELF_VAR("SlotNum") == 1) then {true} else {false};
+        PR _spwnDef = if (SELF_VAR(MAX_SLOTS) == 1) then {true} else {false};
         PR _drType = (typeOf _drone);
         PR _values = switch (true) do {
             case ("UAV_01" in _drType): {
@@ -182,6 +182,7 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
         if (SELF_VAR("AllowOnlyListed")) then {
             _grenList = [];
             MEMBER("RemoveListed", false);
+            _removeListed = false;
         };
 
         // adding\removing gren classes from "List of things you want to attach"
@@ -212,7 +213,7 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
         };
 
         //removing chemlights
-        if (_removeChemlights) then {
+        if (SELF_VAR("RemoveChemlights")) then {
             {
                 PR _el = _x;
                 if (("hemlight" in _el) || ("HandFlare" in _el)) then {
@@ -222,7 +223,7 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
         };
 
         //removing smokes
-        if (_removeSmokes) then {
+        if (SELF_VAR("RemoveSmokes")) then {
             PR _rmvSmokeArr = [];
             PR _rmvSmokeArrCfgs = "'moke' in getText(_x >> 'displayNameShort');" configClasses (configFile >> "CfgMagazines");
             {
@@ -257,6 +258,8 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
 
         MEMBER("AllowedGrenList", _grenList);
 
+        _grenList RLOG
+
         _grenList
     };
 
@@ -290,9 +293,9 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
         [_this, _grenAmount] RLOG
 
         // update slots count
-        PR _newSlotsAmount = SELF_VAR("SlotsOccupied") + _amount;
+        PR _newSlotsAmount = SELF_VAR(CURR_SLOTS) + _amount;
         
-        MEMBER("SlotsOccupied", _newSlotsAmount);
+        MEMBER(CURR_SLOTS, _newSlotsAmount);
 		DSVAR [CURR_SLOTS, _newSlotsAmount, true];
     };
 
@@ -322,9 +325,9 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
         };
 
         // update slots count
-        PR _newSlotsAmount = SELF_VAR("SlotsOccupied") - _amount;
+        PR _newSlotsAmount = SELF_VAR(CURR_SLOTS) - _amount;
         
-        MEMBER("SlotsOccupied", _newSlotsAmount);
+        MEMBER(CURR_SLOTS, _newSlotsAmount);
 		DSVAR [CURR_SLOTS, _newSlotsAmount, true];
     };
 
@@ -457,7 +460,7 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
 
         PR _drone = SELF_VAR("Drone");
 
-        MEMBER("SlotNum", _this);
+        MEMBER(MAX_SLOTS, _this);
 		DSVAR [MAX_SLOTS, _this, true];
     };
 

@@ -28,6 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define TRIPLES(var1,var2,var3) var1##_##var2##_##var3
 #define DEFAULT_PARAM(idx,dft) (if ((count _this) > idx) then {_this select idx} else {dft})
 #define TO_LOCAL(var) _##var
+#define LWR(s) (toLower s)
 
 //////////////////////////////////////////////////////////////
 //  Group: Internal Definitions
@@ -362,6 +363,6 @@ Multiplayer implementation by Vazar
 
 
 // VARIABLE SETTER/GETTER
-#define SETTER(typeStr,fncName) {CHECK_MEMBER(fncName)} && {CHECK_TYPE("ANY")} && {_ooSetType = typeStr; true}):
-#define IF_SET if ((!isNil "_this") && {_this isEqualType _ooSetType}) then
+#define SETTER(typeStr,fncName) {CHECK_MEMBER(fncName)} && {_ooSetType = typeStr; true}):
+#define IF_SET if ((!isNil "_this") && {LWR(typeName _this) == LWR(_ooSetType)}) then
 #define IF_GET else

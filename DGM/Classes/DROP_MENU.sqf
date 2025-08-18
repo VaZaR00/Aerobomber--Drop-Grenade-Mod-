@@ -7,7 +7,7 @@
         All methods and class handling is LOCAL
 */
 
-#define IS_MENU_ACTIVE "_target getVariable ['DGM_IsMenuActive', false]"
+#define IS_MENU_ACTIVE format["(_target getVariable ['%1', false])", SPREF("IsMenuActive")]
 #define IS_CONTROLLING_DRONE_CODE ((vehicle (remoteControlled player)) isEqualTo _target)
 #define IS_CONTROLLING_DRONE STR(IS_CONTROLLING_DRONE_CODE)
 #define SLOTS_AVAILABLE_CODE ((_target GV [CURR_SLOTS, 0]) < (_target GV [MAX_SLOTS, 0]))
@@ -19,7 +19,6 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
     PUBLIC VARIABLE("hashmap", "Actions"); // (hashmap) grenclass : (hashmap) [attach: id, detach: id, drop: id]
     PUBLIC VARIABLE("scalar", "MenuAction"); // Menu action
     PUBLIC VARIABLE("scalar", "CloseAction"); // Close Menu action
-    PUBLIC VARIABLE("bool", "IsMenuActive");
     PUBLIC VARIABLE("array", "AllActions");
 
 
@@ -51,6 +50,17 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
 
 		_drone setVariable ["DGM_menuInstance", nil];
     }; 
+
+    PUBLIC SETTER("bool", "IsMenuActive") {
+        PR _drone = SELF_VAR("Drone");
+        IF_SET {
+            RLOG
+            _drone SV [SPREF("IsMenuActive"), _this];
+        } 
+        IF_GET {
+            _drone GV [SPREF("IsMenuActive"), false];
+        }
+    };
 
     PUBLIC FUNCTION("any", "addActionMenu") {
         [] RLOG
@@ -233,7 +243,6 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
 
     PUBLIC FUNCTION("bool", "SetMenuActive") {
         MEMBER("IsMenuActive", _this);
-        SELF_VAR("Drone") setVariable ["DGM_IsMenuActive", _this];
 
         if (_this) then {
             MEMBER("LoadGrensMenu", nil);
@@ -244,12 +253,12 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
                 PR _inventoryDisplay = 602;
                 waitUntil { 
                     uiSleep 0.1;
-                    !(_target getVariable ["DGM_IsMenuActive", false]) || 
+                    !(_target getVariable [SPREF("IsMenuActive"), false]) || 
                     ((_target distance player) > 3) || 
                     (!(isNull (findDisplay _inventoryDisplay))) ||
                     (IS_CONTROLLING_DRONE_CODE)
                 };
-                if (_target getVariable ["DGM_IsMenuActive", false]) then {  
+                if (_target getVariable [SPREF("IsMenuActive"), false]) then {  
                     METHOD(_menuInstance, "SetMenuActive", false);
                 };
             ENSURE_SPAWN_ONCE_END
@@ -363,6 +372,8 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
             if !(_el in _allowedgrens) then {SKIP};
             _playerGrens set [_el, ({_el == _x} count _playerMags), true];
         } forEach _playerMags;
+
+        [_drone, _allowedgrens, _currentMenuGrenades, _playerGrens] RLOG
 
         if (count _playerGrens == 0) exitWith {
             SHOW_HINT LBL_DONT_HAVE_GRENS;
