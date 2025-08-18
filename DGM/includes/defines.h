@@ -9,6 +9,7 @@
 #define PREF_VAR PREFX##_var_
 #define PREF(t) DGM##_##t
 #define QPREF(t) STR(PREF(t))
+#define SPREF(t) (STR(PREFX) + t)
 #define FUNC(fnc) PREF_FNC##fnc
 #define VAR(fnc) PREF_VAR##fnc
 #define QFUNC(f) (MGVAR [STR(PREF_FNC) + f, {}])

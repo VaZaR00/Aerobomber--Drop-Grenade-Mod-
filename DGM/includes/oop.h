@@ -307,6 +307,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 			private _oopOriginCall = DEFAULT_PARAM(4,nil); \
 			_this = DEFAULT_PARAM(2,nil); \
 			private _argType = if (isNil "_this") then {""} else {typeName _this}; \
+			private _ooSetType = ""; \
 			switch (true) do { \
 				PUBLIC FUNCTION("ANY", "classname") { \
 					className \
@@ -354,3 +355,13 @@ Multiplayer implementation by Vazar
 
 #define MEMBER_TARGET(memberStr,args,targ) MEMBER(memberStr,args); SET_TARGET(targ); MEMBER_GLOBAL(memberStr,args); GLOBALY;
 #define METHOD_TARGET(object, method, args, targ) METHOD(object, method, args); SET_TARGET(targ); METHOD_GLOBAL(object, method, args); GLOBALY;
+
+
+#define SERVER_FUNCTION(typeStr,fncName) {(isServer && isMultiplayer) && CHECK_MEMBER(fncName)} && {CHECK_TYPE(typeStr)}):
+#define CLIENT_FUNCTION(typeStr,fncName) {(!isServer && isMultiplayer) && CHECK_MEMBER(fncName)} && {CHECK_TYPE(typeStr)}):
+
+
+// VARIABLE SETTER/GETTER
+#define SETTER(typeStr,fncName) {CHECK_MEMBER(fncName)} && {CHECK_TYPE("ANY")} && {_ooSetType = typeStr; true}):
+#define IF_SET if ((!isNil "_this") && {_this isEqualType _ooSetType}) then
+#define IF_GET else

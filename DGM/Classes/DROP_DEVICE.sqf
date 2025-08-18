@@ -11,24 +11,16 @@
 CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
 
     PUBLIC VARIABLE("object", "Drone");              // дрон
-    PUBLIC VARIABLE("scalar", "SlotNum");            // количество слотов
-    PUBLIC VARIABLE("scalar", "SlotsOccupied");      // количество занятых слотов
-    PUBLIC VARIABLE("bool", "SpawnWithGren");        // спавнить ли с гранатой
     PUBLIC VARIABLE("bool", "SpawnTempGren");        // спавнить ли декоративную гранату
     PUBLIC VARIABLE("array", "AddedItems");          // список добавленных предметов
     PUBLIC VARIABLE("bool", "AllowOnlyListed");          
     PUBLIC VARIABLE("bool", "RemoveListed");          
     PUBLIC VARIABLE("bool", "RemoveChemlights");          
     PUBLIC VARIABLE("bool", "RemoveSmokes");          
-    PUBLIC VARIABLE("array", "AllowedGrenList");     // 
-
-    PUBLIC VARIABLE("object", "TempAttachedGren");          // 
-    PUBLIC VARIABLE("hashmap", "DroneGrenList");     // [класс гранаты] = [кол-во]
-    PUBLIC VARIABLE("scalar", "Z_offset");            // z offset
-    PUBLIC VARIABLE("bool", "SpawnGren");          // 
-    PUBLIC VARIABLE("scalar", "TempAttachGrenOffset");          // 
-    PUBLIC VARIABLE("object", "TempDropGren");          // 
-    PUBLIC VARIABLE("code", "MenuInstance");          // 
+    PUBLIC VARIABLE("array", "AllowedGrenList");     
+    PUBLIC VARIABLE("scalar", "Z_offset");            
+    PUBLIC VARIABLE("scalar", "TempAttachGrenOffset");  
+    PUBLIC VARIABLE("code", "MenuInstance");         
 
 
     PUBLIC FUNCTION("array", "constructor") {
@@ -50,19 +42,58 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
         _addedItems = _addedItems splitString ";,: ";
 
 		_drone setVariable ["DGM_deviceInstance", _instance];
-		_drone setVariable [MAX_SLOTS, _slotNum];
-		_drone setVariable [CURR_SLOTS, 0];
 
         MEMBER("Drone", _drone);
-        MEMBER("SlotNum", _slotNum);
-        MEMBER("SlotsOccupied", 0);
-        MEMBER("SpawnWithGren", _spawnWithGren);
         MEMBER("SpawnTempGren", _spawnTempGren);
         MEMBER("AddedItems", _addedItems);
-        MEMBER("TempAttachedGren", objNull);
-        MEMBER("TempDropGren", objNull);
+        MEMBER("AllowOnlyListed", _allowOnlyListed);
+        MEMBER("RemoveListed", _removeListed);
+        MEMBER("RemoveChemlights", _removeChemlights);
+        MEMBER("RemoveSmokes", _removeSmokes);
 
-        MEMBER("DroneGrenList", createHashMap);
+        MEMBER("DefineAttachParams", nil);
+        MEMBER("DefineAllowedGrens", nil);
+
+        PR _menuInstance = NEW(OO_DROP_MENU, [_drone]);
+        MEMBER("MenuInstance", _menuInstance);
+
+        _drone SV [SPREF("SlotNum"), _slotNum];
+
+        if (local _drone) then {
+            MEMBER("SlotNum", _slotNum);
+
+            if (_spawnWithGren) then {
+                if (_spawnTempGren && {!(_addedItems isEqualTo [])}) then {
+                    ["_spawnTempGren", _drone] RLOG
+                    MEMBER("SpawnAttachedGren", _addedItems select 0);
+                };
+                ["DGM_attachGrenEvent", [_drone, (_addedItems#0), objNull, _slotNum, 0]] call CBA_fnc_globalEvent;
+            };
+        };
+    };
+
+    PUBLIC FUNCTION("array", "deconstructor") { // execute globaly
+		MEMBER("DeleteAttachedGren", nil);
+
+        ["delete"] call (_drone GV ["DGM_menuInstance", {}]);
+
+		_drone setVariable ["DGM_deviceInstance", nil];
+    };
+
+    // VARIABLE SETTERS
+
+    PUBLIC SETTER("scalar", "SlotsOccupied") {
+        PR _drone = SELF_VAR("Drone");
+        IF_SET {
+            RLOG
+            _drone SV [SPREF("SlotsOccupied"), _this, true];
+        } 
+        IF_GET {
+            _drone GV [SPREF("SlotsOccupied"), 0];
+        }
+    };
+
+    PUBLIC SETTER("hashmap", "DroneGrenList") {
         /*
             DroneGrenList Element Structure
 
@@ -74,29 +105,49 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
                 "DetachId": int 
             ]
         */
-
-        PR _menuInstance = NEW(OO_DROP_MENU, [_drone]);
-        MEMBER("MenuInstance", _menuInstance);
-
-        MEMBER("DefineAttachParams", nil);
-        MEMBER("DefineAllowedGrens", nil);
-
-        if (_spawnWithGren && (local _drone)) then {
-            if (_spawnTempGren && {!(_addedItems isEqualTo [])}) then {
-                ["_spawnTempGren", _drone] RLOG
-                MEMBER("SpawnAttachedGren", _addedItems select 0);
-            };
-            ["DGM_attachGrenEvent", [_drone, (_addedItems#0), objNull, _slotNum, 0]] call CBA_fnc_globalEvent;
-        };
+        PR _drone = SELF_VAR("Drone");
+        IF_SET {
+            RLOG
+            _drone SV [SPREF("DroneGrenList"), _this, true];
+        } 
+        IF_GET {
+            _drone GV [SPREF("DroneGrenList"), createHashMap];
+        }
     };
 
-    PUBLIC FUNCTION("array", "deconstructor") { // execute globaly
-		MEMBER("DeleteAttachedGren", nil);
-
-        ["delete"] call (_drone GV ["DGM_menuInstance", {}]);
-
-		_drone setVariable ["DGM_deviceInstance", nil];
+    PUBLIC SETTER("object", "TempAttachedGren") {
+        PR _drone = SELF_VAR("Drone");
+        IF_SET {
+            _drone SV [SPREF("TempAttachedGren"), _this, true];
+        } 
+        IF_GET {
+            _drone GV [SPREF("TempAttachedGren"), objNull];
+        }
     };
+
+    PUBLIC SETTER("object", "TempDropGren") {
+        PR _drone = SELF_VAR("Drone");
+        IF_SET {
+            _drone SV [SPREF("TempDropGren"), _this, true];
+            _drone SV ["DGM_tempGrenClassname", typeOf _this, true];
+        } 
+        IF_GET {
+            _drone GV [SPREF("TempDropGren"), objNull];
+        }
+    };
+
+    PUBLIC SETTER("scalar", "SlotNum") {
+        PR _drone = SELF_VAR("Drone");
+        IF_SET {
+            RLOG
+            _drone SV [SPREF("SlotNum"), _this, true];
+        } 
+        IF_GET {
+            _drone GV [SPREF("SlotNum"), 1];
+        }
+    };
+
+    // METHODS
 
     PUBLIC FUNCTION("ANY", "DefineAttachParams") {
         PR _spwnDef = if (SELF_VAR("SlotNum") == 1) then {true} else {false};
@@ -114,7 +165,7 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
         };
         _values params ["_spawnGrenObj", "_z_offsetAttach", "_z_offsetDrop"];
 
-        MEMBER("SpawnGren", _spawnGrenObj);
+        MEMBER("SpawnTempGren", _spawnGrenObj);
         MEMBER("TempAttachGrenOffset", _z_offsetAttach);
         MEMBER("Z_offset", _z_offsetDrop);
     };
@@ -221,25 +272,27 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
     PUBLIC FUNCTION("array", "addGrenade") {
         params ["_grenClass", ["_amount", 1]];
 
-        private _droneGrenList = SELF_VAR("DroneGrenList");
-        private _info = MEMBER("getGrenadeData", _grenClass);
-        private _num = _info getOrDefault ["Amount", 0];
+        PR _droneGrenList = SELF_VAR("DroneGrenList");
+        PR _info = MEMBER("getGrenadeData", _grenClass);
+        PR _num = _info getOrDefault ["Amount", 0];
+        PR _grenAmount = _num + _amount;
+        PR _drone = SELF_VAR("Drone");
 	    
-        _info set ["Amount", _num + _amount];
+        _info set ["Amount", _grenAmount];
         _droneGrenList set [_grenClass, _info];
 
-        MEMBER_GLOBAL("DroneGrenList", _droneGrenList);
+        MEMBER("DroneGrenList", _droneGrenList);
+
         if (SELF_VAR("SpawnTempGren")) then {
             MEMBER("SpawnAttachedGren", _grenClass);
         };
 
-        [_this, _num + _amount] RLOG
+        [_this, _grenAmount] RLOG
 
         // update slots count
-        PR _drone = SELF_VAR("Drone");
         PR _newSlotsAmount = SELF_VAR("SlotsOccupied") + _amount;
         
-        MEMBER_GLOBAL("SlotsOccupied", _newSlotsAmount);
+        MEMBER("SlotsOccupied", _newSlotsAmount);
 		DSVAR [CURR_SLOTS, _newSlotsAmount, true];
     };
 
@@ -250,6 +303,7 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
         PR _info = MEMBER("getGrenadeData", _grenClass);
         PR _num = _info getOrDefault ["Amount", 0];
         PR _grenAmount = _num - _amount;
+        PR _drone = SELF_VAR("Drone");
 
         if (_grenAmount <= 0) then {
             _droneGrenList deleteAt _grenClass;
@@ -257,7 +311,7 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
             _info set ["Amount", _grenAmount];
             _droneGrenList set [_grenClass, _info];
         };
-        MEMBER_GLOBAL("DroneGrenList", _droneGrenList);
+        MEMBER("DroneGrenList", _droneGrenList);
 
         PR _tempGren = SELF_VAR("TempAttachedGren");
 
@@ -268,10 +322,9 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
         };
 
         // update slots count
-        PR _drone = SELF_VAR("Drone");
         PR _newSlotsAmount = SELF_VAR("SlotsOccupied") - _amount;
         
-        MEMBER_GLOBAL("SlotsOccupied", _newSlotsAmount);
+        MEMBER("SlotsOccupied", _newSlotsAmount);
 		DSVAR [CURR_SLOTS, _newSlotsAmount, true];
     };
 
@@ -314,9 +367,8 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
             _gren setVectorDirandUp [[0,0,-1],[0.1,0.1,1]];
             _gren setVelocity [(_droneVelocity select 0) / _velCoef, (_droneVelocity select 1) / _velCoef ,-2];
         };
-        _drone setVariable ["DGM_tempGren", _gren, true];
 
-        MEMBER_GLOBAL("TempDropGren", _gren);
+        MEMBER("TempDropGren", _gren);
 
 		SHOW_HINT TXT_DROPED;
 
@@ -354,9 +406,7 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
 
         [_item, _gren] RLOG
 
-        MEMBER_GLOBAL("TempAttachedGren", _gren);
-        _drone setVariable ["DGM_TempAttachedGren", _gren, true];
-        _drone setVariable ["DGM_tempGrenClassname", _item, true];
+        MEMBER("TempAttachedGren", _gren);
 
         _gren
     }; 
@@ -373,9 +423,7 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
 
         deleteVehicle _tempGren;
 
-        MEMBER_GLOBAL("TempAttachedGren", objNull);
-        _drone setVariable ["DGM_TempAttachedGren", objNull, true];
-        _drone setVariable ["DGM_tempGrenClassname", "", true];
+        MEMBER("TempAttachedGren", objNull);
     }; 
 
     PUBLIC FUNCTION("string", "getGrenadeData") {
@@ -388,12 +436,11 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
         if (isNil "_droneGrenList") exitWith {0};
         
         (_droneGrenList getOrDefault [_this, createHashMap]) getOrDefault ["Amount", 0];
-    }; 
+    };
 
     PUBLIC FUNCTION("string", "grenadeAvailable") {
         if (_this == "") exitWith {false};
 
-        private _drone = SELF_VAR("Drone");
         private _amount = MEMBER("getGrenAmount", _this);
 
         if ((isNil "_amount") || {_amount <= 0}) exitWith {
@@ -410,7 +457,7 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
 
         PR _drone = SELF_VAR("Drone");
 
-        MEMBER_GLOBAL("SlotNum", _this);
+        MEMBER("SlotNum", _this);
 		DSVAR [MAX_SLOTS, _this, true];
     };
 
