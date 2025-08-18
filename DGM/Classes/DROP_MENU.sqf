@@ -53,6 +53,7 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
     }; 
 
     PUBLIC FUNCTION("any", "addActionMenu") {
+        [] RLOG
         // Menu Action
         PR _arg = [
             "MenuAction",
@@ -70,6 +71,7 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
     };
 
     PUBLIC FUNCTION("any", "addActionClose") {
+        [] RLOG
         // Close Menu Action
         PR _arg = [
             "CloseAction",
@@ -121,6 +123,7 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
     // Detach Action
     // DetachId
     PUBLIC FUNCTION("string", "addActionDetach") {
+        _this RLOG
         PR _itemAmount = 1;
         PR _itemName = ITEM_NAME(_this);
         PR _arg = [
@@ -146,6 +149,7 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
     // Drop Action
     // DropId
     PUBLIC FUNCTION("string", "addActionDrop") {
+        _this RLOG
         PR _itemAmount = 1;
         PR _itemName = ITEM_NAME(_this);
         PR _arg = [
@@ -255,6 +259,7 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
     };
 
     PUBLIC FUNCTION("any", "UpdateMenu") {
+        "UPDATE" RLOG
         MEMBER("SetMenuActive", SELF_VAR("IsMenuActive"));
     };
 
@@ -299,6 +304,8 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
 
         _drone setUserActionText [_actionsHash getOrDefault ["DetachId", -1], TXT_DETACH];
         _drone setUserActionText [_actionsHash getOrDefault ["DropId", -1], TXT_DROP];
+
+        [_this, _itemAmount, TXT_DETACH, TXT_DROP] RLOG
         
         _itemAmount = (MGVAR ["DGM_currentGrenadesListCounts", createHashMap]) get _itemClass;
         if !(isNil "_itemAmount") then {

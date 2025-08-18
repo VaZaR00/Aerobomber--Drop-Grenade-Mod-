@@ -31,7 +31,7 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
     PUBLIC VARIABLE("code", "MenuInstance");          // 
 
 
-    PUBLIC FUNCTION("array", "constructor") { // execute globaly
+    PUBLIC FUNCTION("array", "constructor") {
         PR _drone = _this#0;
         params[
             "_drone",
@@ -44,6 +44,8 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
             ["_removeChemlights", D_GET_VAR("remove_chemlights", true)],
             ["_removeSmokes", D_GET_VAR("remove_smokes", true)]
         ];
+
+        _this RLOG
 
         _addedItems = _addedItems splitString ";,: ";
 
@@ -81,6 +83,7 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
 
         if (_spawnWithGren && (local _drone)) then {
             if (_spawnTempGren && {!(_addedItems isEqualTo [])}) then {
+                ["_spawnTempGren", _drone] RLOG
                 MEMBER("SpawnAttachedGren", _addedItems select 0);
             };
             ["DGM_attachGrenEvent", [_drone, (_addedItems#0), objNull, _slotNum, 0]] call CBA_fnc_globalEvent;
@@ -230,6 +233,8 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
             MEMBER("SpawnAttachedGren", _grenClass);
         };
 
+        [_this, _num + _amount] RLOG
+
         // update slots count
         PR _drone = SELF_VAR("Drone");
         PR _newSlotsAmount = SELF_VAR("SlotsOccupied") + _amount;
@@ -257,6 +262,7 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
         PR _tempGren = SELF_VAR("TempAttachedGren");
 
         // delete temp object
+        [_grenClass, SELF_VAR("Drone") GV ["DGM_tempGrenClassname", ""], _tempGren, _grenAmount] RLOG
         if ((_grenClass == (SELF_VAR("Drone") GV ["DGM_tempGrenClassname", ""])) && (_grenAmount == 0)) then {
             MEMBER("DeleteAttachedGren", nil);
         };
@@ -346,6 +352,8 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
         PR _gren = createSimpleObject [_itemModel, [0,0,0]];
         _gren attachTo [_drone, [0,0,_zOffset]];
 
+        [_item, _gren] RLOG
+
         MEMBER_GLOBAL("TempAttachedGren", _gren);
         _drone setVariable ["DGM_TempAttachedGren", _gren, true];
         _drone setVariable ["DGM_tempGrenClassname", _item, true];
@@ -355,10 +363,13 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
 
     PUBLIC FUNCTION("ANY", "DeleteAttachedGren") {
         PR _tempGren = SELF_VAR("TempAttachedGren");
+        [_tempGren] RLOG
 
         if (_tempGren isEqualTo objNull) EX;
 
         PR _drone = SELF_VAR("Drone");
+
+        [_drone, _tempGren] RLOG
 
         deleteVehicle _tempGren;
 
@@ -375,6 +386,7 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
     PUBLIC FUNCTION("string", "getGrenAmount") {
         private _droneGrenList = SELF_VAR("DroneGrenList");
         if (isNil "_droneGrenList") exitWith {0};
+        
         (_droneGrenList getOrDefault [_this, createHashMap]) getOrDefault ["Amount", 0];
     }; 
 
