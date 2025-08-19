@@ -48,7 +48,6 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
     };
 
     PUBLIC FUNCTION("any", "deconstructor") {
-        [_drone, SELF_VAR("AllActions")] RLOG
 
 		{
             MEMBER("removeAction", _x)

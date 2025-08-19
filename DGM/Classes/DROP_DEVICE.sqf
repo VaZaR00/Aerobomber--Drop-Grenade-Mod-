@@ -78,7 +78,6 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
                 params ["_drone", "_killer", "_instigator", "_useEffects"];
 
                 PR _deviceInst = DGVAR ["DGM_deviceInstance", {}];
-                ["MPKilled", _this, !(_deviceInst isEqualTo {})] RLOG;
 
                 DELETE(_deviceInst);
             }];
@@ -92,7 +91,6 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
 
         PR _drone = SELF_VAR('Drone');
 
-        [_drone, SELF_VAR("TempAttachedGren")] RLOG
         if (local _drone) then {
 		    MEMBER("DeleteAttachedGren", nil);
         };
@@ -302,7 +300,6 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
         PR _tempGrenClass = SELF_VAR("TempAttachedGrenClass");
 
         // delete temp object
-        [_drone, "delete temp object", (typeOf _tempGren), _grenAmount, _grenClass, _tempGrenClass, (LWR(_grenClass) == LWR(_tempGrenClass)), (_grenAmount == 0), ((_grenClass == (typeOf _tempGren)) && (_grenAmount == 0))] RLOG
         if ((LWR(_grenClass) == LWR(_tempGrenClass)) && (_grenAmount == 0)) then {
             MEMBER("DeleteAttachedGren", nil);
         };
@@ -402,7 +399,6 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
         // executed where the drone is local
         PR _tempGren = SELF_VAR("TempAttachedGren");
 
-        [_drone, _tempGren] RLOG
 
         if (_tempGren isEqualTo objNull) EX;
 
