@@ -1,10 +1,10 @@
 #include "generic.h"
 #include "oop.h"
+#include "main.h"
 
 // #define MP_RLOG ;
 // #define RLOG ;
 
-#define PREFX DGM
 
 #define UNQ_TEMP_VAR(v1, v2) (format["%1_%2", STR(PREFX), UNQ_HASHVAL(v1, v2)])
 
