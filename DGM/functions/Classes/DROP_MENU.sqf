@@ -109,6 +109,10 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
                 params ["_target", "_caller", "_actionId", "_arguments"];
                 _arguments params ["_grenClass"];
 
+                if !([_caller, _grenClass] call BIS_fnc_hasItem) exitWith {
+                    SHOW_HINT LBL_DONT_HAVE_THIS_GREN;
+                };
+
                 if !((_target GV [VAR_CURR_SLOTS, 0]) < (_target GV [VAR_MAX_SLOTS, 0])) exitWith {
                     SHOW_HINT LBL_CANT_ADD_MORE_GREN;
                 };
@@ -119,7 +123,12 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
                 ["DGM_attachGrenEvent", [_target, _grenClass, _caller, 1, _currentCount]] call CBA_fnc_globalEvent;
             },
             [_itemClass],
-            format["(%1) && !(%2) && (call %3)", IS_MENU_ACTIVE, IS_CONTROLLING_DRONE, {SLOTS_AVAILABLE_CODE}],
+            format[
+                "(%1) && {!(%2) && {(call %3) && {(call %4)}}}", 
+                IS_MENU_ACTIVE, 
+                IS_CONTROLLING_DRONE, 
+                {SLOTS_AVAILABLE_CODE}, 
+                {!(isNil "DGM_currentGrenadesListCounts") && {!ARR_EMPTY(DGM_currentGrenadesListCounts)}}],
             2,
             _itemClass
         ];
@@ -372,9 +381,9 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
 
         DGM_currentGrenadesListCounts =  _playerGrens;
 
-        {
-            MEMBER("addActionAttach", [_x C _y]);
-        } forEach _playerGrens;
+            {
+                MEMBER("addActionAttach", [_x C _y]);
+            } forEach _playerGrens;
 
         (_currentMenuGrenades select {!(_x in _playerGrens)}) apply {
             PR _grenActions = MEMBER("getGrenActions", _x); 
