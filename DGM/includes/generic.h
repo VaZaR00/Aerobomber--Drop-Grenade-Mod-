@@ -1,4 +1,5 @@
 
+
 #define STR(s) #s
 #define PR private
 #define GV getVariable
@@ -14,6 +15,16 @@
 #define DOLOG MSVAR ["TEMP_DO_LOG", true];
 #define NOLOG MSVAR ["TEMP_DO_LOG", false];
 #define CRTHSH createHashMap
+
+#define PREF_FNC PREFX##_fnc_
+#define PREF_VAR PREFX##_var_
+#define PREF(t) PREFX##_##t
+#define QPREF(t) STR(PREF(t))
+#define SPREF(t) (STR(PREFX) + "_" + t)
+#define FUNC(fnc) PREF_FNC##fnc
+#define VAR(fnc) PREF_VAR##fnc
+#define QFUNC(f) (MGVAR [STR(PREF_FNC) + f, {}])
+
 
 #define GET_PLAYER_DRONE (vehicle (remoteControlled player))
 

@@ -366,3 +366,26 @@ Multiplayer implementation by Vazar
 #define SETTER(typeStr,fncName) {CHECK_MEMBER(fncName)} && {_ooSetType = typeStr; true}):
 #define IF_SET if ((!isNil "_this") && {LWR(typeName _this) == LWR(_ooSetType)}) then
 #define IF_GET else
+
+#ifndef PREFX
+	#define PREFX ""
+#endif
+#define STR(s) #s
+#ifndef SPREF
+	#define SPREF(s) (STR(PREFX) + "_" + t)
+#endif
+#ifndef CLASS_MAIN_OBJ
+	#define CLASS_MAIN_OBJ ""
+#endif
+
+// just variable setter to main object, nothing more
+#define VAR_SETTER(typeStr,fncName,defaultVal) SETTER(typeStr,fncName) { \
+	PR _mainObj = SELF_VAR(CLASS_MAIN_OBJ); \
+	if (isNil "_mainObj") EW {defaultVal}; \
+	IF_SET { \
+		_mainObj SV [SPREF(fncName), _this, true]; \
+	}  \
+	IF_GET { \
+		_mainObj GV [SPREF(fncName), defaultVal]; \
+	} \
+};

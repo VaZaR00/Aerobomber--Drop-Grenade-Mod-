@@ -44,9 +44,13 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
     };
 
     PUBLIC FUNCTION("any", "deconstructor") {
+        [_drone, SELF_VAR("AllActions")] RLOG
+
 		{
             MEMBER("removeAction", _x)
         } forEach SELF_VAR("AllActions");
+
+        MEMBER('IsMenuActive', false);
 
 		_drone setVariable ["DGM_menuInstance", nil];
     }; 
