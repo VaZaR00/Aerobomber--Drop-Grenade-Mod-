@@ -8,7 +8,9 @@
     Локальные переменные интерфейса (например, ActionIds) должны храниться на объекте дрона локально.
 */
 
-#define CLASS_MAIN_OBJ "Drone"
+#ifdef CLASS_MAIN_OBJ
+	#define CLASS_MAIN_OBJ "Drone"
+#endif
 
 CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
 
@@ -59,7 +61,7 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
         PR _menuInstance = NEW(OO_DROP_MENU, [_drone]);
         MEMBER("MenuInstance", _menuInstance);
 
-        _drone SV [MAX_SLOTS, _slotNum];
+        _drone SV [VAR_MAX_SLOTS, _slotNum];
 
         if (local _drone) then {
             MEMBER(MAX_SLOTS, _slotNum);
@@ -71,21 +73,21 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
                 ["DGM_attachGrenEvent", [_drone, (_addedItems#0), objNull, _slotNum, 0]] call CBA_fnc_globalEvent;
             };
 
+            // Killed Event Handler to call deconstructor
+            private _MPKilledId = _drone addMPEventHandler ["MPKilled", {
+                params ["_drone", "_killer", "_instigator", "_useEffects"];
+
+                PR _deviceInst = DGVAR ["DGM_deviceInstance", {}];
+                ["MPKilled", _this, !(_deviceInst isEqualTo {})] RLOG;
+
+                DELETE(_deviceInst);
+            }];
+
+            MEMBER('MPKilledId', _MPKilledId);
         };
-
-        // Killed Event Handler to call deconstructor
-        private _MPKilledId = _drone addMPEventHandler ["MPKilled", {
-            params ["_drone", "_killer", "_instigator", "_useEffects"];
-
-            PR _deviceInst = DGVAR ["DGM_deviceInstance", {}];
-
-            DELETE(_deviceInst);
-        }];
-
-        MEMBER('MPKilledId', _MPKilledId);
     };
 
-    PUBLIC FUNCTION("array", "deconstructor") { 
+    PUBLIC FUNCTION("any", "deconstructor") { 
         // execute localy
 
         PR _drone = SELF_VAR('Drone');
@@ -118,18 +120,20 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
 
     PUBLIC VAR_SETTER("object", "TempAttachedGren", objNull);
 
+    PUBLIC VAR_SETTER("string", "TempAttachedGrenClass", "");
+
     PUBLIC VAR_SETTER("object", "TempDropGren", objNull);
 
-    PUBLIC VAR_SETTER("scalar", "MaxSlotNum", 1);
+    PUBLIC VAR_SETTER("scalar", MAX_SLOTS, 1);
 
-    PUBLIC VAR_SETTER("scalar", "SlotsOccupied", 0);
+    PUBLIC VAR_SETTER("scalar", CURR_SLOTS, 0);
 
     PUBLIC VAR_SETTER("scalar", "MPKilledId", -1);
 
     // METHODS
 
     PUBLIC FUNCTION("ANY", "DefineAttachParams") {
-        PR _spwnDef = if (SELF_VAR(MAX_SLOTS) == 1) then {true} else {false};
+        PR _spwnDef = if (SELF_VAR(MAX_SLOTS) isEqualTo 1) then {true} else {false};
         PR _drType = (typeOf _drone);
         PR _values = switch (true) do {
             case ("UAV_01" in _drType): {
@@ -274,7 +278,6 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
         PR _newSlotsAmount = SELF_VAR(CURR_SLOTS) + _amount;
         
         MEMBER(CURR_SLOTS, _newSlotsAmount);
-		DSVAR [CURR_SLOTS, _newSlotsAmount, true];
     };
 
     PUBLIC FUNCTION("array", "removeGrenade") {
@@ -296,10 +299,11 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
         MEMBER("DroneGrenList", _droneGrenList);
 
         PR _tempGren = SELF_VAR("TempAttachedGren");
+        PR _tempGrenClass = SELF_VAR("TempAttachedGrenClass");
 
         // delete temp object
-        [_drone, "delete temp object"] RLOG
-        if ((_grenClass == (typeOf _tempGren)) && (_grenAmount == 0)) then {
+        [_drone, "delete temp object", (typeOf _tempGren), _grenAmount, _grenClass, _tempGrenClass, (LWR(_grenClass) == LWR(_tempGrenClass)), (_grenAmount == 0), ((_grenClass == (typeOf _tempGren)) && (_grenAmount == 0))] RLOG
+        if ((LWR(_grenClass) == LWR(_tempGrenClass)) && (_grenAmount == 0)) then {
             MEMBER("DeleteAttachedGren", nil);
         };
 
@@ -307,7 +311,6 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
         PR _newSlotsAmount = SELF_VAR(CURR_SLOTS) - _amount;
         
         MEMBER(CURR_SLOTS, _newSlotsAmount);
-		DSVAR [CURR_SLOTS, _newSlotsAmount, true];
     };
 
     PUBLIC FUNCTION("string", "Drop") {
@@ -390,6 +393,7 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
 
 
         MEMBER("TempAttachedGren", _gren);
+        MEMBER("TempAttachedGrenClass", _item);
 
         _gren
     }; 
@@ -407,6 +411,7 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
         deleteVehicle _tempGren;
 
         MEMBER("TempAttachedGren", objNull);
+        MEMBER("TempAttachedGrenClass", "");
     }; 
 
     PUBLIC FUNCTION("string", "getGrenadeData") {

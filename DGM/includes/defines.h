@@ -8,8 +8,10 @@
 
 #define UNQ_TEMP_VAR(v1, v2) (format["%1_%2", STR(PREFX), UNQ_HASHVAL(v1, v2)])
 
-#define CURR_SLOTS QPREF(SlotsOccupied)
-#define MAX_SLOTS QPREF(MaxSlotNum)
+#define CURR_SLOTS "SlotsOccupied"
+#define VAR_CURR_SLOTS QPREF(SlotsOccupied)
+#define MAX_SLOTS "MaxSlotNum"
+#define VAR_MAX_SLOTS QPREF(MaxSlotNum)
 
 #define D_GET_VAR(var, def) (_drone getVariable [var, def])
 #define D_SET_VAR(var, val) _drone setVariable [var, val, true]

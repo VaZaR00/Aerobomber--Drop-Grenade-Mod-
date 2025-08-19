@@ -10,7 +10,11 @@
 #define IS_MENU_ACTIVE format["(_target getVariable ['%1', false])", SPREF("IsMenuActive")]
 #define IS_CONTROLLING_DRONE_CODE ((vehicle (remoteControlled player)) isEqualTo _target)
 #define IS_CONTROLLING_DRONE STR(IS_CONTROLLING_DRONE_CODE)
-#define SLOTS_AVAILABLE_CODE ((_target GV [CURR_SLOTS, 0]) < (_target GV [MAX_SLOTS, 0]))
+#define SLOTS_AVAILABLE_CODE ((_target GV [VAR_CURR_SLOTS, 0]) < (_target GV [VAR_MAX_SLOTS, 0]))
+
+#ifdef CLASS_MAIN_OBJ
+	#define CLASS_MAIN_OBJ "Drone"
+#endif
 
 // LOCAL
 CLASS("OO_DROP_MENU") // IOO_DROP_MENU
@@ -55,15 +59,7 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
 		_drone setVariable ["DGM_menuInstance", nil];
     }; 
 
-    PUBLIC SETTER("bool", "IsMenuActive") {
-        PR _drone = SELF_VAR("Drone");
-        IF_SET {
-            _drone SV [SPREF("IsMenuActive"), _this];
-        } 
-        IF_GET {
-            _drone GV [SPREF("IsMenuActive"), false];
-        }
-    };
+    PUBLIC LOCAL_VAR_SETTER("bool", "IsMenuActive", false);
 
     PUBLIC FUNCTION("any", "addActionMenu") {
         // Menu Action
@@ -114,7 +110,7 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
                 params ["_target", "_caller", "_actionId", "_arguments"];
                 _arguments params ["_grenClass"];
 
-                if !((_target GV [CURR_SLOTS, 0]) < (_target GV [MAX_SLOTS, 0])) exitWith {
+                if !((_target GV [VAR_CURR_SLOTS, 0]) < (_target GV [VAR_MAX_SLOTS, 0])) exitWith {
                     SHOW_HINT LBL_CANT_ADD_MORE_GREN;
                 };
 

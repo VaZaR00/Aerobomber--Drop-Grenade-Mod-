@@ -309,6 +309,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 			_this = DEFAULT_PARAM(2,nil); \
 			private _argType = if (isNil "_this") then {""} else {typeName _this}; \
 			private _ooSetType = ""; \
+			private _ooVarSetGlobal = true; \
 			switch (true) do { \
 				PUBLIC FUNCTION("ANY", "classname") { \
 					className \
@@ -383,9 +384,11 @@ Multiplayer implementation by Vazar
 	PR _mainObj = SELF_VAR(CLASS_MAIN_OBJ); \
 	if (isNil "_mainObj") EW {defaultVal}; \
 	IF_SET { \
-		_mainObj SV [SPREF(fncName), _this, true]; \
+		_mainObj SV [SPREF(fncName), _this, _ooVarSetGlobal]; \
 	}  \
 	IF_GET { \
 		_mainObj GV [SPREF(fncName), defaultVal]; \
 	} \
 };
+#define LOCAL_VAR_SETTER(typeStr,fncName,defaultVal) {_ooVarSetGlobal = false; true} && VAR_SETTER(typeStr,fncName,defaultVal)
+#define GLOBAL_VAR_SETTER(typeStr,fncName,defaultVal) VAR_SETTER(typeStr,fncName,defaultVal)
