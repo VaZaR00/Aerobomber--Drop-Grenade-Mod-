@@ -1,0 +1,11 @@
+Language,                English,             Russian
+STR_DGM_LBL_ATTACH_GREN,       "Attach %1: %2",     "Причепити %1: %2"
+STR_DGM_LBL_DETACH_GREN,       "Detach %1: %2",     "Відчепити %1: %2"
+STR_DGM_LBL_DROP_GREN,       "Drop %1: %2",     "Drop %1: %2"
+STR_DGM_LBL_DONT_HAVE_GRENS,       "You don't have grenades",     "У вас немає гранат"
+STR_DGM_LBL_GRENS_MENU,       "Attach grenades menu: %1 slots",     ""
+STR_DGM_LBL_CLOSE_MENU,       "Close menu",     "Закрити меню"
+STR_DGM_LBL_MENU,       "Drop device menu",     "Меню скидів"
+STR_DGM_LBL_DROPED_GREN,       "%1 Dropped",     "%1 Скинуто"
+STR_DGM_LBL_SLOTS_NOT_ENOUGH,       "Slots number can't be less than 1!",     "Кількість скидів не може бути менша ніж 1!"
+STR_DGM_LBL_CANT_ADD_MORE_GREN,       "Can't add more grenades",     "Неможна додати більше гранат"

@@ -5,7 +5,7 @@
 		[this, 1] call DGM_fnc_setSlotsNumber;
 */
 
-#include "includes\defines.h"
+#include "defines.h"
 
 params["_drone", "_num"];
 

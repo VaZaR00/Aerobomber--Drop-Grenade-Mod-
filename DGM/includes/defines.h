@@ -30,18 +30,18 @@
 // localization
 #define SHOW_HINT hint
 
-#define LOC  
+#define LOC localize
 
-#define LBL_ATTACH_GREN (LOC "Attach %1: %2")
-#define LBL_DETACH_GREN (LOC "Detach %1: %2")
-#define LBL_DROP_GREN (LOC "Drop %1: %2")
-#define LBL_DONT_HAVE_GRENS (LOC "You don't have grenades")
-#define LBL_GRENS_MENU (LOC "Attach grenades menu: %1 slots")
-#define LBL_CLOSE_MENU (LOC "Close menu")
-#define LBL_MENU (LOC "Drop device menu")
-#define LBL_DROPED_GREN (LOC "%1 Dropped")
-#define LBL_SLOTS_NOT_ENOUGH (LOC "Slots number can't be less than 1!")
-#define LBL_CANT_ADD_MORE_GREN (LOC "Can't add more grenades")
+#define LBL_ATTACH_GREN (LOC "$STR_DGM_LBL_ATTACH_GREN")
+#define LBL_DETACH_GREN (LOC "$STR_DGM_LBL_DETACH_GREN")
+#define LBL_DROP_GREN (LOC "$STR_DGM_LBL_DROP_GREN")
+#define LBL_DONT_HAVE_GRENS (LOC "$STR_DGM_LBL_DONT_HAVE_GRENS")
+#define LBL_GRENS_MENU (LOC "$STR_DGM_LBL_GRENS_MENU")
+#define LBL_CLOSE_MENU (LOC "$STR_DGM_LBL_CLOSE_MENU")
+#define LBL_MENU (LOC "$STR_DGM_LBL_MENU")
+#define LBL_DROPED_GREN (LOC "$STR_DGM_LBL_DROPED_GREN")
+#define LBL_SLOTS_NOT_ENOUGH (LOC "$STR_DGM_LBL_SLOTS_NOT_ENOUGH")
+#define LBL_CANT_ADD_MORE_GREN (LOC "$STR_DGM_LBL_CANT_ADD_MORE_GREN")
 
 #define TXT_ATTACH format[TXT_CLR(LBL_ATTACH_GREN, GREEN), _itemName, _itemAmount]
 #define TXT_DETACH format[TXT_CLR(LBL_DETACH_GREN, RED), _itemName, _itemAmount]

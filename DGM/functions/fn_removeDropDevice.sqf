@@ -2,7 +2,7 @@
 	Name: DGM_fnc_removeDropDevice
 */
 
-#include "includes\defines.h"
+#include "defines.h"
 
 params["_drone"];
 

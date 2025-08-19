@@ -5,7 +5,7 @@
 		[this, 1, true, "rhs_VOG25"] call DGM_fnc_dropDevice;
 */
 
-#include "includes\defines.h"
+#include "defines.h"
 
 FILE_ONLY_SPAWN
 

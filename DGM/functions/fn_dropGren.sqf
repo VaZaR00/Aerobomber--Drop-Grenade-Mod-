@@ -5,7 +5,7 @@
 		[_this, "rhs_vog25"] call DGM_fnc_dropGren;
 */
 
-#include "includes\defines.h"
+#include "defines.h"
 
 params["_drone", "_grenClass"];
 
