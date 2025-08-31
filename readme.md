@@ -72,7 +72,3 @@ Call DGM_fnc_setSlotsNumber on drone:
 ## Credits
 
 - Author: Vazar
-
-## License
-
-This project is intended for use in Arma 3 missions. Please credit the author if used or modified.
