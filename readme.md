@@ -18,31 +18,31 @@ Steam: https://steamcommunity.com/sharedfiles/filedetails/?id=3144481988
 # Add Drop device
 
 Call DGM_fnc_dropDevice on drone with parameters:
-- **`. drone`** `(Object)`  
+- **` drone`** `(Object)`  
     The drone object to which the drop device system will be attached.
 
-- **`. slotNum`** `(Number, default: 1)`  
+- **` slotNum`** `(Number, default: 1)`  
     Number of grenade/item slots available on the drone.
 
-- **`. spawnWithGren`** `(Boolean, default: true)`  
+- **` spawnWithGren`** `(Boolean, default: true)`  
     If true, the drone will spawn with grenades/items already attached.
 
-- **`. addedItems`** `(String, default: "")`  
+- **` addedItems`** `(String, default: "")`  
     List of grenade/item classnames to attach at spawn, separated by `;`, `,`, `:`, or space.
 
-- **`. spawnTempGren`** `(Boolean, default: true)`  
+- **` spawnTempGren`** `(Boolean, default: true)`  
     If true, a decorative (visual) grenade object will be spawned and attached to the drone.
 
-- **`. allowOnlyListed`** `(Boolean, default: false)`  
+- **` allowOnlyListed`** `(Boolean, default: false)`  
     If true, only items listed in `addedItems` can be attached to the drone.
 
-- **`. removeListed`** `(Boolean, default: false)`  
+- **` removeListed`** `(Boolean, default: false)`  
     If true, items listed in `addedItems` will be removed from the allowed list (blacklist mode).
 
-- **`. removeChemlights`** `(Boolean, default: true)`  
+- **` removeChemlights`** `(Boolean, default: true)`  
     If true, chemlights and flares will be excluded from the allowed items.
 
-- **`. removeSmokes`** `(Boolean, default: true)`  
+- **` removeSmokes`** `(Boolean, default: true)`  
     If true, smoke grenades will be excluded from the allowed items.
 
 Example: 
@@ -51,16 +51,16 @@ Example:
 # Remove Drop device
 
 Call DGM_fnc_removeDropDevice on drone:
-- **`. drone`** `(Object)`  
+- **` drone`** `(Object)`  
     The drone object on which you want to remove Drop Device.
 
 # Set custom Drop device slots number
 
 Call DGM_fnc_setSlotsNumber on drone:
-- **`. drone`** `(Object)`  
+- **` drone`** `(Object)`  
     The drone object on which you want to remove Drop Device.
 
-- **`. slotNum`** `(Number, default: 1)`  
+- **` slotNum`** `(Number, default: 1)`  
     Number of grenade/item slots available on the drone.
 
 
