@@ -24,20 +24,20 @@ Call DGM_fnc_dropDevice on drone with parameters:
 - **` slotNum`** `(Number, default: 1)`  
     Number of grenade/item slots available on the drone.
 
-- **` spawnWithGren`** `(Boolean, default: true)`  
-    If true, the drone will spawn with grenades/items already attached.
+- **` spawnWithGren`** `(String, default: "HandGrenade")`  
+    If not empty, the drone will spawn with gren class (first) already attached.
 
 - **` addedItems`** `(String, default: "")`  
-    List of grenade/item classnames to attach at spawn, separated by `;`, `,`, `:`, or space.
+    List of allowed grenade/item classnames, separated by `;`, `,`, `:`, or space.
+
+- **` removedItems`** `(String, default: "")`  
+    List of restricted grenade/item classnames, separated by `;`, `,`, `:`, or space.
 
 - **` spawnTempGren`** `(Boolean, default: true)`  
     If true, a decorative (visual) grenade object will be spawned and attached to the drone.
 
 - **` allowOnlyListed`** `(Boolean, default: false)`  
-    If true, only items listed in `addedItems` can be attached to the drone.
-
-- **` removeListed`** `(Boolean, default: false)`  
-    If true, items listed in `addedItems` will be removed from the allowed list (blacklist mode).
+    If true, only items listed in Custom list can be attached to the drone.
 
 - **` removeChemlights`** `(Boolean, default: true)`  
     If true, chemlights and flares will be excluded from the allowed items.
@@ -46,7 +46,7 @@ Call DGM_fnc_dropDevice on drone with parameters:
     If true, smoke grenades will be excluded from the allowed items.
 
 Example: 
-    [this, 1, true, "rhs_VOG25"] call DGM_fnc_dropDevice;
+    [this, 1, "rhs_VOG25"] call DGM_fnc_dropDevice;
 
 # Remove Drop device
 

@@ -34,11 +34,11 @@ if (is3DEN) exitWith {};
 	[
 		_object,
 		LGVAR ["slotNum", 1],
-		BOOL("spawnWithGren", 1)
+		LGVAR ["spawnWithGren", "HandGrenade"],
 		LGVAR ["addedItems", ""],
+		LGVAR ["removedItems", ""],
 		BOOL("spawnTempGren", 1),
 		BOOL("allowOnlyListed", 0),
-		BOOL("removeListed", 0),
 		BOOL("removeChemlights", 1)
 		BOOL("removeSmokes", 1)
 	] call DGM_fnc_dropGren;

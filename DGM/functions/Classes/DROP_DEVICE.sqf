@@ -17,8 +17,9 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
     PUBLIC VARIABLE("object", "Drone");              // дрон
     PUBLIC VARIABLE("bool", "SpawnTempGren");        // спавнить ли декоративную гранату
     PUBLIC VARIABLE("array", "AddedItems");          // список добавленных предметов
-    PUBLIC VARIABLE("bool", "AllowOnlyListed");          
-    PUBLIC VARIABLE("bool", "RemoveListed");          
+    PUBLIC VARIABLE("array", "RemovedItems");        // список запрещенных предметов
+    PUBLIC VARIABLE("array", "CustomItems");        // список кастомных предметов
+    PUBLIC VARIABLE("bool", "AllowOnlyListed");        
     PUBLIC VARIABLE("bool", "RemoveChemlights");          
     PUBLIC VARIABLE("bool", "RemoveSmokes");          
     PUBLIC VARIABLE("array", "AllowedGrenList");     
@@ -33,11 +34,11 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
         params[
             "_drone",
             ["_slotNum", D_GET_VAR("Amount_of_slots_t", 1)],
-            ["_spawnWithGren", D_GET_VAR("spawn_with_gren", true)],
+            ["_spawnWithGren", D_GET_VAR("spawn_with_gren", "HandGrenade")],
             ["_addedItems", D_GET_VAR("list_of_grens", "")],
+            ["_removedItems", D_GET_VAR("removedItems", "")],
             ["_spawnTempGren", D_GET_VAR("spawn_temp_gren", true)],
             ["_allowOnlyListed", D_GET_VAR("allow_only_list", false)],
-            ["_removeListed", D_GET_VAR("remove_list_grens", false)],
             ["_removeChemlights", D_GET_VAR("remove_chemlights", true)],
             ["_removeSmokes", D_GET_VAR("remove_smokes", true)]
         ];
@@ -45,20 +46,26 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
 
 		["constructor", time] RLOG
 
+        PR _customList = _spawnWithGren splitString ";,: ";
+        _spawnWithGren = if (ARR_EMPTY(_customList)) then {""} else {_customList#0};
+
         _addedItems = _addedItems splitString ";,: ";
+        _removedItems = _removedItems splitString ";,: ";
 
 		_drone setVariable ["DGM_deviceInstance", _instance];
 
         MEMBER("Drone", _drone);
         MEMBER("SpawnTempGren", _spawnTempGren);
         MEMBER("AddedItems", _addedItems);
+        MEMBER("RemovedItems", _removedItems);
+        MEMBER("CustomList", _customList);
         MEMBER("AllowOnlyListed", _allowOnlyListed);
-        MEMBER("RemoveListed", _removeListed);
         MEMBER("RemoveChemlights", _removeChemlights);
         MEMBER("RemoveSmokes", _removeSmokes);
 
+        ARGS [_customList, _addedItems, _removedItems, _allowOnlyListed, _removeChemlights, _removeSmokes];
         MEMBER("DefineAttachParams", nil);
-        MEMBER("DefineAllowedGrens", nil);
+        MEMBER("DefineAllowedGrens", _args);
 
         PR _menuInstance = NEW(OO_DROP_MENU, [_drone]);
         MEMBER("MenuInstance", _menuInstance);
@@ -68,9 +75,9 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
         if (local _drone) then {
             MEMBER(MAX_SLOTS, _slotNum);
 
-            if (_spawnWithGren) then {
-                if (_spawnTempGren && {!(_addedItems isEqualTo [])}) then {
-                    MEMBER("SpawnAttachedGren", _addedItems select 0);
+            if !(_spawnWithGren isEqualTo "") then {
+                if (_spawnTempGren) then {
+                    MEMBER("SpawnAttachedGren", _spawnWithGren);
                 };
                 ["DGM_attachGrenEvent", [_drone, (_addedItems#0), objNull, _slotNum, 0]] call CBA_fnc_globalEvent;
             };
@@ -154,22 +161,31 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
     };
 
     PUBLIC FUNCTION("ANY", "DefineAllowedGrens") {
+        params[
+            ['_customList', []], 
+            ['_addedItems', []], 
+            ['_removedItems', []], 
+            ['_allowOnlyListed', false], 
+            ['_removeChemlights', true], 
+            ['_removeSmokes', true]
+        ];
+
         (MEMBER("GetConfigData", nil)) params [["_expArr", [], [[]]], ["_cfgAmmoList", [], [[]]]];
+        
+        MEMBER("AllowedGrenList", _customList);
 
         if (_expArr isEqualTo []) EX;
         if (_cfgAmmoList isEqualTo []) EX;
 
-        PR _addedItemsArr = [];
 
-        PR _grenList = +_expArr;
-        if (SELF_VAR("AllowOnlyListed")) then {
-            _grenList = [];
-            MEMBER("RemoveListed", false);
-            _removeListed = false;
+        if (_allowOnlyListed) exitWith {
+            _customList
         };
+        PR _grenList = +_expArr;
 
-        // adding\removing gren classes from "List of things you want to attach"
-        PR _addArr = SELF_VAR("AddedItems");
+        // adding gren classes from Add Items list
+        PR _addedItemsArr = [];
+        PR _addArr = _addedItems;
 
         if (count _addArr > 0) then {
             {	
@@ -179,24 +195,37 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
                     PR _magsOfAmmoCfg = "(_x >> 'ammo') == _el;" configClasses (configFile >> "CfgMagazines");
                     PR _magsOfAmmoCfgEl = _magsOfAmmoCfg select 0;
                     PR _magsOfAmmo = configName _magsOfAmmoCfgEl;
-                    if (_removeListed) then {
-                        _grenList = _grenList - [_magsOfAmmo];
-                    }else{
-                        _addedItemsArr pushBack _magsOfAmmo;
-                    };
+                    _addedItemsArr pushBack _magsOfAmmo;
                 }else { 
                     //if magazine classes written to custom list
-                    if (_removeListed) then {
-                        _grenList = _grenList - [_el];
-                    }else{
-                        _addedItemsArr pushBack _el;
-                    };
+                    _addedItemsArr pushBack _el;
                 };
             } forEach _addArr;
         };
 
+        _grenList append _addedItemsArr;
+
+        // removing gren classes from Remove Items list
+        PR _remArr = _removedItems;
+
+        if (count _remArr > 0) then {
+            {	
+                PR _el = _x;
+                //if ammo classes written to custom list
+                if (_el in _cfgAmmoList) then {
+                    PR _magsOfAmmoCfg = "(_x >> 'ammo') == _el;" configClasses (configFile >> "CfgMagazines");
+                    PR _magsOfAmmoCfgEl = _magsOfAmmoCfg select 0;
+                    PR _magsOfAmmo = configName _magsOfAmmoCfgEl;
+                    _grenList = _grenList - [_magsOfAmmo];
+                }else { 
+                    //if magazine classes written to custom list
+                    _grenList = _grenList - [_el];
+                };
+            } forEach _remArr;
+        };
+
         //removing chemlights
-        if (SELF_VAR("RemoveChemlights")) then {
+        if (_removeChemlights) then {
             {
                 PR _el = _x;
                 if (("hemlight" in _el) || ("HandFlare" in _el)) then {
@@ -206,7 +235,7 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
         };
 
         //removing smokes
-        if (SELF_VAR("RemoveSmokes")) then {
+        if (_removeSmokes) then {
             PR _rmvSmokeArr = [];
             PR _rmvSmokeArrCfgs = "'moke' in getText(_x >> 'displayNameShort');" configClasses (configFile >> "CfgMagazines");
             {
@@ -240,7 +269,6 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
         CLR_DUPS(_grenList);
 
         MEMBER("AllowedGrenList", _grenList);
-
 
         _grenList
     };

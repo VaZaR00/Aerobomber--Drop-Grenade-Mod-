@@ -2,7 +2,7 @@
 	Name: DGM_fnc_dropDevice
 
 	Example: 
-		[this, 1, true, "rhs_VOG25"] call DGM_fnc_dropDevice;
+		[this, 1, "rhs_VOG25"] call DGM_fnc_dropDevice;
 */
 
 #include "defines.h"

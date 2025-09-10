@@ -31,8 +31,10 @@ class CfgVehicles
         displayName = "$STR_WMT_Module_Device_FactionName";
         category = STR(PREFX);
         function = SFUNC(initModuleDropDevice);
-        icon = "";
-        portrait = "";
+        // icon = "a3\weapons_f\data\ui\icon_gl_ca.paa";
+        // portrait = "a3\weapons_f\data\ui\icon_gl_ca.paa";
+        icon = "a3\ui_f\data\gui\rsc\rscdisplayarsenal\cargothrow_ca.paa";
+        portrait = "a3\ui_f\data\gui\rsc\rscdisplayarsenal\cargothrow_ca.paa";
         functionPriority = 2;
         isGlobal = 1;
         isTriggerActivated = 0;
@@ -57,13 +59,8 @@ class CfgVehicles
             {
                 displayName = SSTR(spawnWithGren);
                 description = SSTR_DESC(spawnWithGren);
-                typeName = "NUMBER";
-                defaultValue = 1;
-                class values
-                {
-                    class Yes    {name = SSTR(Yes); value = 1; default = 0;};
-                    class No   {name = SSTR(No); value = 0;};
-                };
+                typeName = "STRING";
+                defaultValue = "HandGrenade";
             };
             class addedItems
             {
@@ -72,14 +69,22 @@ class CfgVehicles
                 typeName = "STRING";
                 defaultValue = "";
             };
+            class removedItems
+            {
+                displayName = SSTR(removedItems);
+                description = SSTR_DESC(removedItems);
+                typeName = "STRING";
+                defaultValue = "";
+            };
             class spawnTempGren
             {
                 displayName = SSTR(spawnTempGren);
                 description = SSTR_DESC(spawnTempGren);
                 typeName = "NUMBER";
+                defaultValue = 1;
                 class values
                 {
-                    class Yes    {name = SSTR(Yes); value = 1; default = 0;};
+                    class Yes    {name = SSTR(Yes); value = 1;};
                     class No   {name = SSTR(No); value = 0;};
                 };
             };
@@ -90,18 +95,7 @@ class CfgVehicles
                 typeName = "NUMBER";
                 class values
                 {
-                    class Yes    {name = SSTR(Yes); value = 1; default = 0;};
-                    class No   {name = SSTR(No); value = 0;};
-                };
-            };
-            class removeListed
-            {
-                displayName = SSTR(removeListed);
-                description = SSTR_DESC(removeListed);
-                typeName = "NUMBER";
-                class values
-                {
-                    class Yes    {name = SSTR(Yes); value = 1; default = 0;};
+                    class Yes    {name = SSTR(Yes); value = 1;};
                     class No   {name = SSTR(No); value = 0;};
                 };
             };
@@ -110,9 +104,10 @@ class CfgVehicles
                 displayName = SSTR(removeChemlights);
                 description = SSTR_DESC(removeChemlights);
                 typeName = "NUMBER";
+                defaultValue = 1;
                 class values
                 {
-                    class Yes    {name = SSTR(Yes); value = 1; default = 0;};
+                    class Yes    {name = SSTR(Yes); value = 1;};
                     class No   {name = SSTR(No); value = 0;};
                 };
             };
@@ -121,9 +116,10 @@ class CfgVehicles
                 displayName = SSTR(removeSmokes);
                 description = SSTR_DESC(removeSmokes);
                 typeName = "NUMBER";
+                defaultValue = 1;
                 class values
                 {
-                    class Yes    {name = SSTR(Yes); value = 1; default = 0;};
+                    class Yes    {name = SSTR(Yes); value = 1;};
                     class No   {name = SSTR(No); value = 0;};
                 };
             };
