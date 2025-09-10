@@ -8,6 +8,8 @@ FUNC(attachGrenEvent) = {
 
 		WAIT_SCRIPT_END(DGM_attachGrenEvent);
 
+		["attachGrenEvent", time] RLOG
+
 		// on mission init its better to wait until device instance created
 		// because server may do it faster and trigger event before instance created localy
 		waitUntil { !(isNil {DGVAR "DGM_deviceInstance"}) && !(isNil {DGVAR "DGM_menuInstance"}) };

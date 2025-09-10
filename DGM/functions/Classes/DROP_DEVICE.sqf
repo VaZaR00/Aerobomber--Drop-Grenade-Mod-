@@ -43,6 +43,8 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
         ];
 
 
+		["constructor", time] RLOG
+
         _addedItems = _addedItems splitString ";,: ";
 
 		_drone setVariable ["DGM_deviceInstance", _instance];
