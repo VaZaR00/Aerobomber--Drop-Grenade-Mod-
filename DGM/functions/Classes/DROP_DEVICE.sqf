@@ -104,7 +104,8 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
         };
 
         // call DROP_MENU deconstructor
-        ["delete"] call (_drone GV ["DGM_menuInstance", {}]);
+        PR _menuInst = _drone GV ["DGM_menuInstance", {}];
+        DELETE(_menuInst);
 
 		_drone setVariable ["DGM_deviceInstance", nil];
     };
