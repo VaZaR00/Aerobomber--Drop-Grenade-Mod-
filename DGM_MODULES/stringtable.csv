@@ -20,3 +20,5 @@ STR_WMT_Module_Device_removeChemlights, "Remove Chemlights", "Видалити �
 STR_WMT_Module_Device_DESC_removeChemlights, "If true, chemlights and flares will be excluded from the allowed items.", "Якщо увімкнено, хімсвітло і фаєри будуть виключені з дозволених предметів."
 STR_WMT_Module_Device_removeSmokes, "Remove Smokes", "Видалити димові"
 STR_WMT_Module_Device_DESC_removeSmokes, "If true, smoke grenades will be excluded from the allowed items.", "Якщо увімкнено, димові гранати будуть виключені з дозволених предметів."
+STR_WMT_Module_Device_allowSetCharge, "Has Charge", "Має Заряд"
+STR_WMT_Module_Device_DESC_allowSetCharge, "If true player can set Charge - amount of grenades dropped simultaneously", "Якщо увімкнено, гравець може встановити Заряд - кількість одночасно скинутих гранат."

@@ -18,7 +18,7 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
     PUBLIC VARIABLE("bool", "SpawnTempGren");        // спавнить ли декоративную гранату
     PUBLIC VARIABLE("array", "AddedItems");          // список добавленных предметов
     PUBLIC VARIABLE("array", "RemovedItems");        // список запрещенных предметов
-    PUBLIC VARIABLE("array", "CustomItems");        // список кастомных предметов
+    PUBLIC VARIABLE("array", "CustomList");        // список кастомных предметов       
     PUBLIC VARIABLE("bool", "AllowOnlyListed");        
     PUBLIC VARIABLE("bool", "RemoveChemlights");          
     PUBLIC VARIABLE("bool", "RemoveSmokes");          
@@ -37,14 +37,12 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
             ["_spawnWithGren", D_GET_VAR("spawn_with_gren", "HandGrenade")],
             ["_addedItems", D_GET_VAR("list_of_grens", "")],
             ["_removedItems", D_GET_VAR("removedItems", "")],
+            ["_allowSetCharge", D_GET_VAR("allowSetCharge", false)],
             ["_spawnTempGren", D_GET_VAR("spawn_temp_gren", true)],
             ["_allowOnlyListed", D_GET_VAR("allow_only_list", false)],
             ["_removeChemlights", D_GET_VAR("remove_chemlights", true)],
             ["_removeSmokes", D_GET_VAR("remove_smokes", true)]
         ];
-
-
-		["constructor", time] RLOG
 
         PR _customList = _spawnWithGren splitString ";,: ";
         _spawnWithGren = if (ARR_EMPTY(_customList)) then {""} else {_customList#0};
@@ -62,6 +60,7 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
         MEMBER("AllowOnlyListed", _allowOnlyListed);
         MEMBER("RemoveChemlights", _removeChemlights);
         MEMBER("RemoveSmokes", _removeSmokes);
+        MEMBER("CanSetCharge", _allowSetCharge);
 
         ARGS [_customList, _addedItems, _removedItems, _allowOnlyListed, _removeChemlights, _removeSmokes];
         MEMBER("DefineAttachParams", nil);
@@ -79,7 +78,7 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
                 if (_spawnTempGren) then {
                     MEMBER("SpawnAttachedGren", _spawnWithGren);
                 };
-                ["DGM_attachGrenEvent", [_drone, (_addedItems#0), objNull, _slotNum, 0]] call CBA_fnc_globalEvent;
+                ["DGM_attachGrenEvent", [_drone, _spawnWithGren, objNull, _slotNum, 0]] call CBA_fnc_globalEvent;
             };
 
             // Killed Event Handler to call deconstructor
@@ -136,6 +135,10 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
     PUBLIC VAR_SETTER("scalar", CURR_SLOTS, 0);
 
     PUBLIC VAR_SETTER("scalar", "MPKilledId", -1);
+
+    PUBLIC VAR_SETTER("bool", "CanSetCharge", false);
+
+    PUBLIC VAR_SETTER("scalar", "DropCharge", 1);
 
     // METHODS
 
@@ -340,10 +343,11 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
         MEMBER(CURR_SLOTS, _newSlotsAmount);
     };
 
-    PUBLIC FUNCTION("string", "Drop") {
+    PUBLIC FUNCTION("array", "Drop") {
+        params["_item", ["_num", 1]];
+
         // executed where the drone is local
         PR _drone = SELF_VAR("Drone");
-        PR _item = _this;
 
         ITEM_DATA(_item);
         
@@ -353,11 +357,12 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
         };
 
         PR _droneVelocity = velocity _drone;
-        PR _pos = _drone modelToWorld [0,0, SELF_VAR("Z_offset")];
-        PR _gren = _itemAmmo createvehicle _pos;
-        [_gren, [_drone, player]] remoteExec ["setShotParents", 2];
-
+        PR _zOffset = SELF_VAR("Z_offset");
         PR _velCoef = 1.5;
+        PR _vectorDirUp = [];
+        PR _velocity = [];
+        PR _velocityModelSpace = [];
+        PR _gren = objNull;
 
         if (
             (missionNamespace getVariable ["DGM_shoot_rockets", true]) &&
@@ -370,15 +375,42 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
             ("fgm" in _item) or
             ("itan" in _item)}
         ) then {
-            _gren setVectorDirandUp [vectorDir _drone,[0.1,0.1,1]];
+            _vectorDirUp = [vectorDir _drone,[0.1,0.1,1]];
             if ("OG7" in _item) then {
-                _gren setVelocityModelSpace [0, 70 ,0];
+                _velocityModelSpace = [0, 70 ,0];
             } else {
-                _gren setVelocity [0, 0 ,0];
+                _velocity = [0, 0 ,0];
             };
         } else {
-            _gren setVectorDirandUp [[0,0,-1],[0.1,0.1,1]];
-            _gren setVelocity [(_droneVelocity select 0) / _velCoef, (_droneVelocity select 1) / _velCoef ,-2];
+            _vectorDirUp = [[0,0,-1],[0.1,0.1,1]];
+            _velocity = [(_droneVelocity select 0) / _velCoef, (_droneVelocity select 1) / _velCoef ,-2];
+        };
+
+        PR _randPos = [0,0];
+        PR _originVelocity = +_velocity;
+
+        FOR_I(_num) {
+            PR _pos = _drone modelToWorld [_randPos#0,_randPos#0, _zOffset];
+            _gren = _itemAmmo createvehicle _pos;
+            [_gren, [_drone, player]] remoteExec ["setShotParents", 2];
+
+            if !(_velocityModelSpace isEqualTo []) then {
+                _gren setVelocityModelSpace _velocityModelSpace;
+            } else {
+                _gren setVelocity _velocity;
+            };
+            _gren setVectorDirandUp _vectorDirUp;
+
+            if ((_num > 1) && (_i < _num)) then {
+                PR _randVel = (MGVAR ["DGM_randomVelocity", 0.15]);
+                PR _randOffset = (MGVAR ["DGM_randomOffset", 0.05]);
+                PR _dropDelay = (MGVAR ["DGM_randomDropDelay", 0.05]);
+
+                _randPos = [random [-_randOffset, 0, _randOffset], random [-_randOffset, 0, _randOffset]];
+                _velocity = _originVelocity vectorAdd [random [-_randVel, 0, _randVel], random [-_randVel, 0, _randVel], 0];
+
+                sleep (random [_dropDelay - (_dropDelay/3), _dropDelay, _dropDelay + (_dropDelay/3)]);
+            };
         };
 
         MEMBER("TempDropGren", _gren);
@@ -472,6 +504,35 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
         PR _drone = SELF_VAR("Drone");
 
         MEMBER(MAX_SLOTS, _this);
+    };
+
+    PUBLIC FUNCTION("scalar", "setCharge") {
+        if (_this <= 0) exitWith {
+            SHOW_HINT LBL_ABOVE_ZERO;
+        };
+
+        MEMBER("DropCharge", _this);
+    };
+
+    PUBLIC FUNCTION("any", "ChangeCharge") {
+        PR _currentCharge = SELF_VAR("DropCharge");
+
+        PR _newCharge = if ((_currentCharge >= 9) || (_currentCharge < 1)) then {
+            1
+        } else {
+            _currentCharge + 1
+        };
+
+        MEMBER("setCharge", _newCharge);
+    };
+
+    PUBLIC FUNCTION("bool", "AllowSetCharge") {
+        if (_this) then {
+            PR _menuInstance = SELF_VAR("MenuInstance");
+
+            METHOD(_menuInstance, "addActionCharge", nil);
+        };
+        MEMBER("CanSetCharge", _this);
     };
 
 ENDCLASS;

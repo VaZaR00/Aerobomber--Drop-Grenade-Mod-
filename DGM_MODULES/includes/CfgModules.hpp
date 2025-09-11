@@ -76,6 +76,18 @@ class CfgVehicles
                 typeName = "STRING";
                 defaultValue = "";
             };
+            class allowSetCharge
+            {
+                displayName = SSTR(allowSetCharge);
+                description = SSTR_DESC(allowSetCharge);
+                typeName = "NUMBER";
+                defaultValue = 0;
+                class values
+                {
+                    class Yes    {name = SSTR(Yes); value = 1;};
+                    class No   {name = SSTR(No); value = 0;};
+                };
+            };
             class spawnTempGren
             {
                 displayName = SSTR(spawnTempGren);

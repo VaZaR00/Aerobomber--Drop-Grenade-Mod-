@@ -15,6 +15,7 @@ class CfgFunctions
             class setSlotsNumber {};
             class dropGren {};
             class attachGren {};
+            class allowSetCharge {};
         };
     };
 };

@@ -3,12 +3,10 @@
 #include "Classes\DROP_MENU.sqf"
 
 FUNC(attachGrenEvent) = {
-	_this spawn {
+	ENSURE_SPAWN_ONCE_START
 		params["_drone", "_grenClass", ["_caller", objNull], ["_num", 1], ["_currentCount", -1]];
 
 		WAIT_SCRIPT_END(DGM_attachGrenEvent);
-
-		["attachGrenEvent", time] RLOG
 
 		// on mission init its better to wait until device instance created
 		// because server may do it faster and trigger event before instance created localy
@@ -34,22 +32,25 @@ FUNC(attachGrenEvent) = {
 			METHOD(_menuInst, "addActionDetach", _grenClass);
 		};
 		METHOD(_menuInst, "UpdateMenu", nil);
-	};
+	ENSURE_SPAWN_ONCE_END
 };
 FUNC(detachGrenEvent) = {
-	_this spawn {
+	ENSURE_SPAWN_ONCE_START
 		WAIT_SCRIPT_END(DGM_detachGrenEvent);
 
-		params["_drone", "_grenClass", ["_caller", player, [player]], ["_currentCount", -1]];
+		params["_drone", "_grenClass", ["_num", 1], ["_caller", player, [player]], ["_currentCount", -1]];
 
 		PR _deviceInst = _drone GV ["DGM_deviceInstance", {}];
 		PR _menuInst = _drone GV ["DGM_menuInstance", {}];
 
 		if (local _drone) then {
-			METHOD(_deviceInst, "removeGrenade", [_grenClass]);
+			ARGS [_grenClass, _num];
+			METHOD(_deviceInst, "removeGrenade", _args);
 		};
 		if (_caller == player) then {
-			_caller addItem _grenClass;
+			FOR_I(_num) {
+				_caller addItem _grenClass;
+			};
 		};
 
 		// wait until amount updated globaly
@@ -57,22 +58,23 @@ FUNC(detachGrenEvent) = {
 		
 		METHOD(_menuInst, "removeGrenActions", _grenClass);
 		METHOD(_menuInst, "UpdateMenu", nil);
-	};
+	ENSURE_SPAWN_ONCE_END
 };
 FUNC(dropGrenEvent) = {
-	_this spawn {
+	ENSURE_SPAWN_ONCE_START
 		WAIT_SCRIPT_END(DGM_dropGrenEvent);
 
-		params["_drone", "_grenClass", ["_caller", player, [player]], ["_currentCount", -1]];
+		params["_drone", "_grenClass", ["_num", 1], ["_caller", player, [player]], ["_currentCount", -1]];
 
 		PR _deviceInst = _drone GV ["DGM_deviceInstance", {}];
 		PR _menuInst = _drone GV ["DGM_menuInstance", {}];
 
 		if (local _drone) then {
-			METHOD(_deviceInst, "removeGrenade", [_grenClass]);
+			ARGS [_grenClass, _num];
+			METHOD(_deviceInst, "removeGrenade", _args);
 		};
 		if (_caller == player) then {
-			METHOD(_deviceInst, "Drop", _grenClass);
+			SPAWN_METHOD(_deviceInst, "Drop", [_grenClass C _num]);
 		};
 
 		// wait until amount updated globaly
@@ -80,7 +82,7 @@ FUNC(dropGrenEvent) = {
 
 		METHOD(_menuInst, "removeGrenActions", _grenClass);
 		METHOD(_menuInst, "UpdateMenu", nil);
-	};
+	ENSURE_SPAWN_ONCE_END
 };
 
 VAR(attachGrenEventHandler_id) = [QPREF(attachGrenEvent), FUNC(attachGrenEvent)] call CBA_fnc_addEventHandler;

@@ -7,6 +7,6 @@
 
 #include "defines.h"
 
-params["_drone", "_grenClass"];
+params["_drone", "_grenClass", ["_num", 1]];
 
-["DGM_detachGrenEvent", [_drone, _grenClass, objNull, 0]] call CBA_fnc_globalEvent;
+["DGM_dropGrenEvent", [_drone, _grenClass, _num, objNull, 0]] call CBA_fnc_globalEvent;

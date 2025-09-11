@@ -43,6 +43,8 @@
 #define LBL_SLOTS_NOT_ENOUGH (LOC "$STR_DGM_LBL_SLOTS_NOT_ENOUGH")
 #define LBL_CANT_ADD_MORE_GREN (LOC "$STR_DGM_LBL_CANT_ADD_MORE_GREN")
 #define LBL_DONT_HAVE_THIS_GREN (LOC "$STR_DGM_LBL_DONT_HAVE_THIS_GREN")
+#define LBL_ABOVE_ZERO (LOC "$STR_DGM_LBL_ABOVE_ZERO")
+#define LBL_SET_CHARGE (LOC "$STR_DGM_LBL_SET_CHARGE")
 
 #define TXT_ATTACH format[TXT_CLR(LBL_ATTACH_GREN, GREEN), _itemName, _itemAmount]
 #define TXT_DETACH format[TXT_CLR(LBL_DETACH_GREN, RED), _itemName, _itemAmount]
@@ -50,10 +52,12 @@
 #define TXT_DROPED format[LBL_DROPED_GREN, _itemName]
 #define TXT_MENU format[TXT_CLR(LBL_MENU, BLUE)]
 #define TXT_CLOSE_MENU format[TXT_CLR(LBL_CLOSE_MENU, RED_b)]
+#define TXT_SET_CHARGE format[TXT_CLR(LBL_SET_CHARGE, BLUE_l), _currentCharge]
 
 #define RED "#ff0000"
 #define RED_b "#b01313"
 #define GREEN "#00ff00"
 #define BLUE "#0390fc"
+#define BLUE_l "#03b0c1"
 
 #define TXT_CLR(txt, clr) "<t color='" + clr + "'>" + txt + "</t>"

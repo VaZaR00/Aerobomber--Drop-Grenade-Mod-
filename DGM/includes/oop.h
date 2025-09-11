@@ -319,14 +319,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	switch (_exception select 0) do { \
 		case ERR_UNDEFMEMBER : { \
 			format ['ERROR UNDEF : %1("%3","%2")', _exception select 1, _exception select 2, _exception select 3] call BIS_fnc_error; \
+			format ['ERROR UNDEF : %1("%3","%2")', _exception select 1, _exception select 2, _exception select 3] RLOG; \
 		}; \
 		default { \
 			format ['EXCEPTION : %1', _exception select 1] call BIS_fnc_error; \
+			format ['EXCEPTION : %1', _exception select 1] RLOG; \
 		}; \
 	}; \
 }}] 
 
 #define METHOD(object, method, args) ([method, args] call object)
+#define SPAWN_METHOD(object, method, args) ([method, args] spawn object)
 #define SELF_VAR(var) (MEMBER(var, nil))
 #define INSTANCE_VAR(object, var) (METHOD(object, var, nil))
 #define GET_CLASS(instance) INSTANCE_VAR(instance, "classname")

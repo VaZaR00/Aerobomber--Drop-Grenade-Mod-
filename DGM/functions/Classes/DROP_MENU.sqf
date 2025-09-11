@@ -12,6 +12,8 @@
 #define IS_CONTROLLING_DRONE STR(IS_CONTROLLING_DRONE_CODE)
 #define SLOTS_AVAILABLE_CODE ((_target GV [VAR_CURR_SLOTS, 0]) < (_target GV [VAR_MAX_SLOTS, 0]))
 
+#define MAIN_ACTIONS ["MenuAction", "CloseAction", "SetChargeAction"]
+
 #ifdef CLASS_MAIN_OBJ
 	#define CLASS_MAIN_OBJ "Drone"
 #endif
@@ -23,12 +25,15 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
     PUBLIC VARIABLE("hashmap", "Actions"); // (hashmap) grenclass : (hashmap) [attach: id, detach: id, drop: id]
     PUBLIC VARIABLE("scalar", "MenuAction"); // Menu action
     PUBLIC VARIABLE("scalar", "CloseAction"); // Close Menu action
+    PUBLIC VARIABLE("scalar", "SetChargeAction"); // Set Charge action
     PUBLIC VARIABLE("array", "AllActions");
+    PUBLIC VARIABLE("code", "DeviceInstance");
 
 
     PUBLIC FUNCTION("array", "constructor") {
         params [
-            "_drone"
+            "_drone",
+            ["_addActionCharge", true]
         ];
 
         if !(hasInterface) exitWith {
@@ -36,15 +41,23 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
             {}
         };
 
+        PR _deviceInst = _drone GV ["DGM_deviceInstance", {}];
+
         MEMBER("Drone", _drone);
         MEMBER("Actions", createHashMap);
         MEMBER("AllActions", []);
         MEMBER("IsMenuActive", false);
+        MEMBER("DeviceInstance", _deviceInst);
 
         MEMBER("addActionMenu", nil);
         MEMBER("addActionClose", nil);
+        if (_addActionCharge) then {
+            MEMBER("addActionCharge", nil);
+        };
 
 		_drone setVariable ["DGM_menuInstance", _instance];
+
+        _instance
     };
 
     PUBLIC FUNCTION("any", "deconstructor") {
@@ -90,6 +103,32 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
             [_instance],
             format["(%1) && !(%2)", IS_MENU_ACTIVE, IS_CONTROLLING_DRONE],
             5
+        ];
+        MEMBER("addAction", _arg);
+    };
+
+    PUBLIC FUNCTION("any", "addActionCharge") {
+        // Close Menu Action
+        PR _deviceInst = SELF_VAR("DeviceInstance");
+        PR _currentCharge = INSTANCE_VAR(_deviceInst, "DropCharge");
+
+        PR _arg = [
+            "SetChargeAction",
+            TXT_SET_CHARGE,
+            {
+                params ["_target", "_caller", "_actionId", "_arguments"];
+                _arguments params ["_menuInstance"];
+
+		        PR _deviceInst = _target GV ["DGM_deviceInstance", {}];
+
+                METHOD(_deviceInst, "ChangeCharge", nil);
+                METHOD(_menuInstance, "addActionCharge", nil);
+            },
+            [_instance],
+            format["((%1) || (%2)) && (%3)", IS_MENU_ACTIVE, IS_CONTROLLING_DRONE, "_target getVariable ['DGM_CanSetCharge', false]"],
+            4,
+            "",
+            _currentCharge
         ];
         MEMBER("addAction", _arg);
     };
@@ -149,8 +188,9 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
 
 		        PR _deviceInst = _target GV ["DGM_deviceInstance", {}];
                 PR _currentCount = METHOD(_deviceInst, "getGrenAmount", _grenClass);
+                PR _num = 1;
 
-                ["DGM_detachGrenEvent", [_target, _grenClass, _caller, _currentCount]] call CBA_fnc_globalEvent;
+                ["DGM_detachGrenEvent", [_target, _grenClass, _num, _caller, _currentCount]] call CBA_fnc_globalEvent;
             },
             [_this],
             format["(%1) && !(%2)", IS_MENU_ACTIVE, IS_CONTROLLING_DRONE],
@@ -174,8 +214,13 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
 
 		        PR _deviceInst = _target GV ["DGM_deviceInstance", {}];
                 PR _currentCount = METHOD(_deviceInst, "getGrenAmount", _grenClass);
+                PR _num = INSTANCE_VAR(_deviceInst, "DropCharge");
 
-                ["DGM_dropGrenEvent", [_target, _grenClass, remoteControlled _caller, _currentCount]] call CBA_fnc_globalEvent;
+                if (_num > _currentCount) then {
+                    _num = _currentCount;
+                };
+
+                ["DGM_dropGrenEvent", [_target, _grenClass, _num, remoteControlled _caller, _currentCount]] call CBA_fnc_globalEvent;
             },
             [_this],
             format["(%1)", IS_CONTROLLING_DRONE],
@@ -186,10 +231,15 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
     };
 
     PUBLIC FUNCTION("array", "addAction") {
-        params[["_type", "", [""]], ["_name", "", [""]], ["_code", {}, [{}]], ["_arguments", [], [[]]], ["_condition", "", [""]], ["_priority", 2, [0]], ["_itemClass", "", [""]]];
+        params[["_type", "", [""]], ["_name", "", [""]], ["_code", {}, [{}]], ["_arguments", [], [[]]], ["_condition", "", [""]], ["_priority", 2, [0]], ["_itemClass", "", [""]], ["_val", -1]];
 
-        if (MEMBER("actionsExists", [_type C _itemClass])) exitWith {
-            MEMBER("modifyActions", _itemClass)
+        if (!(_type in MAIN_ACTIONS) && {MEMBER("actionsExists", [_type C _itemClass])}) exitWith {
+            MEMBER("modifyActions", _itemClass);
+        };
+        [_type, _name, "Charge", _val] RLOG
+        if ((_type in MAIN_ACTIONS) && {MEMBER("actionExists", _type)}) exitWith {
+            ARGS [_type, _name, "Charge", _val];
+            MEMBER("modifyAction", _args);
         };
 
         PR _drone = SELF_VAR("Drone");
@@ -208,9 +258,8 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
             _condition,
             2
         ];
-        if (_itemClass != "") then {
-            MEMBER("addActionId", [_itemClass C _type C _id]);
-        };
+
+        MEMBER("addActionId", [_itemClass C _type C _id]);
         _id
     };
 
@@ -241,7 +290,8 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
     };
 
     PUBLIC FUNCTION("string", "getGrenActions") {
-        SELF_VAR("Actions") getOrDefault [_this, createHashMap];
+        PR _res = SELF_VAR("Actions") getOrDefault [_this, createHashMap];
+        if (_res isEqualType createHashMap) then {_res} else {createHashMap};
     };
 
     PUBLIC FUNCTION("bool", "SetMenuActive") {
@@ -288,6 +338,44 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
         METHOD(_deviceInst, "getGrenAmount", _this);
     };
 
+    // for generic actions
+    PUBLIC FUNCTION("string", "actionExists") {
+        PR _type = _this;
+
+        if (_type == "") exitWith {false};
+
+        PR _action = SELF_VAR(_type);
+
+        if !(isNil "_action") exitWith {true};
+        
+        PR _grenActions = SELF_VAR("Actions") get _type;
+        if (isNil "_grenActions") exitWith {false};
+
+        true
+    };
+
+    PUBLIC FUNCTION("array", "modifyAction") {
+        params["_type", "_text", "_key", "_val"];
+
+        private _drone = SELF_VAR("Drone");
+        private _actions = SELF_VAR("Actions");
+        private _actionsHash = _actions get _type;
+
+        if (isNil "_actionsHash") exitWith {false};
+
+        _drone setUserActionText [_actionsHash getOrDefault ["Id", -1], _text];
+
+        // set
+        _actionsHash set [_key, _val];
+
+        // save
+        _actions set [_type, _actionsHash];
+        MEMBER("Actions", _actions);
+
+        true
+    };
+
+    // for Gren actions
     PUBLIC FUNCTION("array", "actionsExists") {
         params[["_type", "", [""]], ["_itemClass", "", [""]]];
 
@@ -336,6 +424,19 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
             };
             case "CloseAction": {
                 MEMBER("CloseAction", _id);
+            };
+            case "SetChargeAction": {
+                MEMBER("SetChargeAction", _id);
+                // get variables
+                PR _actions = SELF_VAR("Actions");
+                PR _actionHash = _actions getOrDefault [_name, createHashMap];
+
+                // set
+                _actionHash set ["Id", _id];
+
+                // save
+                _actions set [_name, _actionHash];
+                MEMBER("Actions", _actions);
             };
             default {
                 // get variables
