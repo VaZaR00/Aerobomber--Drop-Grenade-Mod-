@@ -40,7 +40,7 @@ if (is3DEN) exitWith {};
 		BOOL("allowSetCharge", 0),
 		BOOL("spawnTempGren", 1),
 		BOOL("allowOnlyListed", 0),
-		BOOL("removeChemlights", 1)
+		BOOL("removeChemlights", 1),
 		BOOL("removeSmokes", 1)
 	] call DGM_fnc_dropGren;
 };
