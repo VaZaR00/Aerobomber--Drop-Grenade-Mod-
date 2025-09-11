@@ -53,7 +53,7 @@ class CfgVehicles
                 displayName = SSTR(slotNum);
                 description = SSTR_DESC(slotNum);
                 typeName = "NUMBER";
-                defaultValue = 100;
+                defaultValue = 1;
             };
             class spawnWithGren
             {

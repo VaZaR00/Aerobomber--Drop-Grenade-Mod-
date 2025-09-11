@@ -37,6 +37,7 @@ if (is3DEN) exitWith {};
 		LGVAR ["spawnWithGren", "HandGrenade"],
 		LGVAR ["addedItems", ""],
 		LGVAR ["removedItems", ""],
+		BOOL("allowSetCharge", 0),
 		BOOL("spawnTempGren", 1),
 		BOOL("allowOnlyListed", 0),
 		BOOL("removeChemlights", 1)
