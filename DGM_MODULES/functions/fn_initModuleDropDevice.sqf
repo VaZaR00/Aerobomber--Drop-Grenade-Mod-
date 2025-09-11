@@ -42,6 +42,6 @@ if (is3DEN) exitWith {};
 		BOOL("allowOnlyListed", 0),
 		BOOL("removeChemlights", 1),
 		BOOL("removeSmokes", 1)
-	] call DGM_fnc_dropGren;
+	] call DGM_fnc_dropDevice;
 };
 

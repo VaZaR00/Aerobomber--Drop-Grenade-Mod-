@@ -236,7 +236,7 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
         if (!(_type in MAIN_ACTIONS) && {MEMBER("actionsExists", [_type C _itemClass])}) exitWith {
             MEMBER("modifyActions", _itemClass);
         };
-        [_type, _name, "Charge", _val] RLOG
+        
         if ((_type in MAIN_ACTIONS) && {MEMBER("actionExists", _type)}) exitWith {
             ARGS [_type, _name, "Charge", _val];
             MEMBER("modifyAction", _args);
