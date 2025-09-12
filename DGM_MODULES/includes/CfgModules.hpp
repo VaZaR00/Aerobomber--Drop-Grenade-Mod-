@@ -1,4 +1,4 @@
-#define STR_PREF STR_WMT_Module_Device_
+#define STR_PREF STR_DGM_Module_Device_
 #define SSTR_N(s) $##STR_PREF##s
 #define SSTR_DESC_N(s) $##STR_PREF##DESC_##s
 #define SSTR(s) STR(SSTR_N(s))
@@ -8,7 +8,7 @@ class CfgFactionClasses
 {
 	class DGM
 	{
-		displayName="$STR_WMT_Module_Device_FactionName";
+		displayName="$STR_DGM_Module_Device_FactionName";
 		priority=0;
 		side=7;
 	};
@@ -28,7 +28,7 @@ class CfgVehicles
     {
         scope = 2;
         author = "Vazar";
-        displayName = "$STR_WMT_Module_Device_FactionName";
+        displayName = "$STR_DGM_Module_Device_FactionName";
         category = STR(PREFX);
         function = SFUNC(initModuleDropDevice);
         // icon = "a3\weapons_f\data\ui\icon_gl_ca.paa";
