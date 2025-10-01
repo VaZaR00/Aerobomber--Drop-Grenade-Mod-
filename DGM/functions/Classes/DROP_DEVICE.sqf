@@ -27,6 +27,30 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
     PUBLIC VARIABLE("scalar", "TempAttachGrenOffset");  
     PUBLIC VARIABLE("code", "MenuInstance");         
 
+    // VARIABLE SETTERS
+    /*
+        DroneGrenList Element Structure
+
+        Type: hashmap
+        [
+            "Name": string,
+            "Amount": int,
+            "DropId": int, 
+            "DetachId": int 
+        ]
+    */
+    PUBLIC VAR_SETTER("hashmap", "DroneGrenList", createHashMap);
+    PUBLIC VAR_SETTER("object", "TempAttachedGren", objNull);
+    PUBLIC VAR_SETTER("string", "TempAttachedGrenClass", "");
+    PUBLIC VAR_SETTER("object", "TempDropGren", objNull);
+    PUBLIC VAR_SETTER("scalar", MAX_SLOTS, 1);
+    PUBLIC VAR_SETTER("scalar", CURR_SLOTS, 0);
+    PUBLIC VAR_SETTER("scalar", "MPKilledId", -1);
+    PUBLIC VAR_SETTER("bool", "CanSetCharge", false);
+    PUBLIC VAR_SETTER("scalar", "DropCharge", 1);
+
+
+    // METHODS
 
     PUBLIC FUNCTION("array", "constructor") { 
         // execute localy
@@ -109,39 +133,6 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
 
 		_drone setVariable ["DGM_deviceInstance", nil];
     };
-
-    // VARIABLE SETTERS
-
-    /*
-        DroneGrenList Element Structure
-
-        Type: hashmap
-        [
-            "Name": string,
-            "Amount": int,
-            "DropId": int, 
-            "DetachId": int 
-        ]
-    */
-    PUBLIC VAR_SETTER("hashmap", "DroneGrenList", createHashMap);
-
-    PUBLIC VAR_SETTER("object", "TempAttachedGren", objNull);
-
-    PUBLIC VAR_SETTER("string", "TempAttachedGrenClass", "");
-
-    PUBLIC VAR_SETTER("object", "TempDropGren", objNull);
-
-    PUBLIC VAR_SETTER("scalar", MAX_SLOTS, 1);
-
-    PUBLIC VAR_SETTER("scalar", CURR_SLOTS, 0);
-
-    PUBLIC VAR_SETTER("scalar", "MPKilledId", -1);
-
-    PUBLIC VAR_SETTER("bool", "CanSetCharge", false);
-
-    PUBLIC VAR_SETTER("scalar", "DropCharge", 1);
-
-    // METHODS
 
     PUBLIC FUNCTION("ANY", "DefineAttachParams") {
         PR _spwnDef = if (SELF_VAR(MAX_SLOTS) isEqualTo 1) then {true} else {false};
