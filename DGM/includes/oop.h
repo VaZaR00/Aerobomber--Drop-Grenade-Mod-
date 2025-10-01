@@ -29,6 +29,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define DEFAULT_PARAM(idx,dft) (if ((count _this) > idx) then {_this select idx} else {dft})
 #define TO_LOCAL(var) _##var
 #define LWR(s) (toLower s)
+#define GV getVariable
+#define SV setVariable
+#define PR private
+#define STR(s) #s
+#define _LOG call {_txt = text format["[OO_LOG]  %3%4 :: %2 :: %1", _this, serverTime, __FILE_SHORT__, if !(isNil "_ooMember") then {format[".%1", _ooMember]} else {""}]; diag_log _txt};
+
+#define CLEAR_SYMBOLS(s) ((s) call {PR _s = toArray _this; PR _n = count _s; PR _r = []; PR _f = true; for "_i" from 0 to (_n - 1) do {PR _c = _s select _i; if (((_c >= 48) && (_c <= 57)) || ((_c >= 65) && (_c <= 90)) || ((_c >= 97) && (_c <= 122))) then {if (_f && (_c >= 48) && (_c <= 57)) then {} else {_r pushBack _c}; _f = false;}}; toString _r})
+#define HASHVAL_(v) CLEAR_SYMBOLS(hashValue v)
+#define UNQ_HASHVAL(v1, v2) (HASHVAL_(v1) + HASHVAL_(v2))
 
 //////////////////////////////////////////////////////////////
 //  Group: Internal Definitions
@@ -46,18 +55,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define ENSURE_INDEX(idx,dft) if ((count _this) <= idx) then {_this set [idx,dft]}
 #define CHECK_THIS if (isNil "_this") then {_this = []} else {if !(_this isEqualType []) then {_this = [_this]}}
 
-#define CHECK_ACCESS(lvl) case ((_access >= lvl) &&
-#define CHECK_TYPE(typeStr) ((_argType isEqualTo toUpper(typeStr)) || {toUpper(typeStr) isEqualTo "ANY"})
-#define CHECK_NIL (_argType isEqualTo "")
-#define CHECK_MEMBER(name) (_member == name)
+#define CHECK_ACCESS(lvl) case ((_ooAccess >= lvl) &&
+#define CHECK_TYPE(typeStr) ((_ooArgType isEqualTo toUpper(typeStr)) || {toUpper(typeStr) isEqualTo "ANY"})
+#define CHECK_NIL (_ooArgType isEqualTo "")
+#define CHECK_MEMBER(name) (_ooMember == name)
 #define CHECK_VAR(typeStr,varName) {CHECK_MEMBER(varName)} && {CHECK_TYPE(typeStr) || CHECK_NIL}
 
-#define GETVAR(var) (_classID + "_" + var)
-#define GETSVAR(var) (_class + "_" + var)
+#define GETVAR(var) (_ooClassID + "_" + var)
+#define GETSVAR(var) (_ooSelfClass + "_" + var)
 #define GETCLASS(className) (NAMESPACE getVariable [className, {nil}])
-#define CALLCLASS(className,member,args,access) (if(isNil "_oopOriginCall")then{ [_classID, member, SAFE_VAR(args),access] call GETCLASS(className) }else{ [_classID, member, SAFE_VAR(args),access] call GETCLASS(_oopOriginCall)})
-#define SPAWNCLASS(className,member,args,access) (if(isNil "_oopOriginCall")then{ [_classID, member, SAFE_VAR(args),access] spawn GETCLASS(className) }else{ [_classID, member, SAFE_VAR(args),access] spawn GETCLASS(_oopOriginCall)})
-#define CALLCLASS_FROMCHILD(className,member,args,access,origin) ([_classID, member, SAFE_VAR(args), access, origin] call GETCLASS(className))
+#define CALLCLASS(className,member,args,access) (if(isNil "_oopOriginCall")then{ [_ooClassID, member, SAFE_VAR(args),access] call GETCLASS(className) }else{ [_ooClassID, member, SAFE_VAR(args),access] call GETCLASS(_oopOriginCall)})
+#define SPAWNCLASS(className,member,args,access) (if(isNil "_oopOriginCall")then{ [_ooClassID, member, SAFE_VAR(args),access] spawn GETCLASS(className) }else{ [_ooClassID, member, SAFE_VAR(args),access] spawn GETCLASS(_oopOriginCall)})
+#define CALLCLASS_FROMCHILD(className,member,args,access,origin) ([_ooClassID, member, SAFE_VAR(args), access, origin] call GETCLASS(className))
 
 #define VAR_DFT_FUNC(varName) {if (isNil "_this") then {NAMESPACE getVariable [GETVAR(varName), nil]} else {NAMESPACE setVariable [GETVAR(varName), _this]};}
 #define UIVAR_DFT_FUNC(varName) {if (isNil "_this") then {UINAMESPACE getVariable [GETVAR(varName), nil]} else {UINAMESPACE setVariable [GETVAR(varName), _this]};}
@@ -117,7 +126,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	See Also:
 		<CLASSEXTENDS>
 */
-#define CLASS(className) INSTANTIATE_CLASS(className, "No Parent") default { throw [ERR_UNDEFMEMBER, _class, _member, _argType]; };
+#define CLASS(className) INSTANTIATE_CLASS(className, "No Parent") default { throw [ERR_UNDEFMEMBER, _ooSelfClass, _ooMember, _ooArgType]; };
 
 /*
 	Macro: CLASS_EXTENDS(childClassName,parentClassName)
@@ -133,7 +142,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	See Also:
 		<CLASS>
 */
-#define CLASS_EXTENDS(childClassName,parentClassName) INSTANTIATE_CLASS(childClassName, parentClassName) default { if(isNil "_oopOriginCall")then{CALLCLASS_FROMCHILD(parentClassName,_member,_this,1, childClassName);}else{CALLCLASS_FROMCHILD(parentClassName,_member,_this,1, _oopOriginCall);}; };
+#define CLASS_EXTENDS(childClassName,parentClassName) INSTANTIATE_CLASS(childClassName, parentClassName) default { if(isNil "_oopOriginCall")then{CALLCLASS_FROMCHILD(parentClassName,_ooMember,_this,1, childClassName);}else{CALLCLASS_FROMCHILD(parentClassName,_ooMember,_this,1, _oopOriginCall);}; };
 
 /*
 	Defines:
@@ -219,8 +228,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 		memberStr - The name of the member function or variable [string].
 		args - The arguments to be passed to the member function or variable [any].
 */
-#define MEMBER(memberStr,args) CALLCLASS(_class,memberStr,args,2)
-#define SPAWN_MEMBER(memberStr,args) SPAWNCLASS(_class,memberStr,args,2)
+#define MEMBER(memberStr,args) CALLCLASS(_ooSelfClass,memberStr,args,2)
+#define SPAWN_MEMBER(memberStr,args) SPAWNCLASS(_ooSelfClass,memberStr,args,2)
 
 /*
 	Macro: SUPER(memberStr,args)
@@ -230,7 +239,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 		memberStr - The name of the parent mumber function
 		args - The arguments to be passed to the member function or variable [any].
 */
-#define SUPER(memberStr,args) CALLCLASS_FROMCHILD(_parentClass,memberStr,args,1, _class)
+#define SUPER(memberStr,args) CALLCLASS_FROMCHILD(_ooParentClass,memberStr,args,1, _ooSelfClass)
 
 /*
 	Macro:  NEW(class, args)
@@ -272,20 +281,27 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	NAMESPACE setVariable [className, { try { \
 	CHECK_THIS; \
 	if ((count _this) > 0) then { \
-		private _class = className; \
-		private _parentClass = parentClassName; \
-		private _oopRemoteTarget = -clientOwner; \
-		if (isNil {_this select 0}) then {_this set [0,_class]}; \
+		private _ooSelfClass = className; \
+		private _ooParentClass = parentClassName; \
+		private _oopRemoteTarget = 0; \
+		if (isNil {_this select 0}) then {_this set [0,_ooSelfClass]}; \
 		switch (_this select 0) do { \
+		case "classname":{ \
+			className; \
+		}; \
 		case "new": { \
 			NAMESPACE setVariable [AUTO_INC_VAR(className), (GET_AUTO_INC(className) + 1)]; \
-			private _classID = className + "_" + str(GET_AUTO_INC(className)); \
-			private _instanceName = format ['%1_this', _classID]; \
-			private _instance = compile format ['CHECK_THIS; ENSURE_INDEX(1,nil); private _instance = missionNamespace getVariable ["%2", {}]; (["%1", (_this select 0), (_this select 1), 0]) call GETCLASS(className);', (className + "_" + str(GET_AUTO_INC(className))), _instanceName]; \
+			private _ooInstanceID = className + "_" + str(GET_AUTO_INC(className)); \
+			private _ooInstanceName = format ['%1_this', _ooInstanceID]; \
+			private _ooSelf = compile format ['CHECK_THIS; ENSURE_INDEX(1,nil); private _ooInstanceID = "%1"; private _ooInstanceName = "%2"; private _ooSelf = missionNamespace getVariable ["%2", {}]; (["%1", (_this select 0), (_this select 1), 0]) call GETCLASS(className);', _ooInstanceID, _ooInstanceName]; \
 			ENSURE_INDEX(1,nil); \
-			NAMESPACE setVariable [_instanceName, _instance]; \
-			[CONSTRUCTOR_METHOD, (_this select 1)] call _instance; \
-			_instance; \
+			NAMESPACE setVariable [_ooInstanceName, _ooSelf, if (isNil "_ooVarSetGlobal") then {true} else {_ooVarSetGlobal}]; \
+			private _ooInstanceHash = UNQ_HASHVAL(_ooInstanceID, _ooSelf); \
+			METHOD(_ooSelf, "InstanceHash", _ooInstanceHash); \
+			METHOD(_ooSelf, "InstanceName", _ooInstanceName); \
+			METHOD(_ooSelf, "Classname", className); \
+			[CONSTRUCTOR_METHOD, (_this select 1)] call _ooSelf; \
+			_ooSelf; \
 		}; \
 		case "static":{ \
 			private _code = compile format ['CHECK_THIS; ENSURE_INDEX(1,nil); (["%1", (_this select 0), (_this select 1), 0]) call GETCLASS(className);', className]; \
@@ -302,96 +318,228 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 			[DECONSTRUCTOR_METHOD, (_this select 2)] call (_this select 1); \
 		}; \
 		default { \
-			private _classID = _this select 0; \
-			private _member = _this select 1; \
-			private _access = DEFAULT_PARAM(3,0); \
+			private _ooClassID = _this select 0; \
+			private _ooMember = param[1, ""]; \
+			private _ooAccess = DEFAULT_PARAM(3,0); \
 			private _oopOriginCall = DEFAULT_PARAM(4,nil); \
 			_this = DEFAULT_PARAM(2,nil); \
-			private _argType = if (isNil "_this") then {""} else {typeName _this}; \
+			private _ooInstanceName = if (isNil "_ooInstanceName") then {_ooSelfClass} else {_ooInstanceName}; \
+			private _ooInstanceID = if (isNil "_ooInstanceID") then {_ooSelfClass} else {_ooInstanceID}; \
+			private _ooSelf = NAMESPACE getVariable [_ooInstanceName, {}]; \
+			private _ooArgType = if (isNil "_this") then {""} else {typeName _this}; \
 			private _ooSetType = ""; \
-			private _ooVarSetGlobal = true; \
+			private _ooVarSetGlobal = if (isNil "_ooVarSetGlobal") then {true} else {_ooVarSetGlobal}; \
 			switch (true) do { \
-				PUBLIC FUNCTION("ANY", "classname") { \
-					className \
-				}; \
+				PRIVATE VARIABLE("string","SelfVarSetterPrefix"); \
+				PRIVATE VARIABLE("string","SelfObjVarSetterPrefix"); \
+				PRIVATE VARIABLE("object","SelfObjVarSetterObject"); \
+				PUBLIC VARIABLE("string", "InstanceHash"); \
+				PUBLIC VARIABLE("string", "InstanceName"); \
+				PUBLIC VARIABLE("string", "Classname"); \
 			
 #define FINALIZE_CLASS };};};};} catch { \
 	switch (_exception select 0) do { \
 		case ERR_UNDEFMEMBER : { \
 			format ['ERROR UNDEF : %1("%3","%2")', _exception select 1, _exception select 2, _exception select 3] call BIS_fnc_error; \
-			format ['ERROR UNDEF : %1("%3","%2")', _exception select 1, _exception select 2, _exception select 3] RLOG; \
+			format ['ERROR UNDEF : %1("%3","%2")', _exception select 1, _exception select 2, _exception select 3] _LOG \
 		}; \
 		default { \
 			format ['EXCEPTION : %1', _exception select 1] call BIS_fnc_error; \
-			format ['EXCEPTION : %1', _exception select 1] RLOG; \
+			format ['EXCEPTION : %1', _exception select 1] _LOG \
 		}; \
 	}; \
 }}] 
 
+
+/*
+
+Addtions by Vazar
+
+*/
+
+
+#define LOCAL_SETTER private _ooVarSetGlobal = false;
+#define GLOBAL_SETTER private _ooVarSetGlobal = true;
+
 #define METHOD(object, method, args) ([method, args] call object)
 #define SPAWN_METHOD(object, method, args) ([method, args] spawn object)
+
 #define SELF_VAR(var) (MEMBER(var, nil))
+#define SET_SELF_VAR(var, val) MEMBER(var, val);
+#define SET_SELF_LOCAL_VAR(var, val) LOCAL_SETTER (MEMBER(var, val)); GLOBAL_SETTER
+#define SELF_VAR_DEF(var, def) (call {private _ooRes = (SELF_VAR(var)); if (isNil "_ooRes") then {def} else {_ooRes}})
+
 #define INSTANCE_VAR(object, var) (METHOD(object, var, nil))
+#define SET_INSTANCE_VAR(object, var, val) METHOD(object, var, nil);
+#define SET_INSTANCE_LOCAL_VAR(object, var, val) LOCAL_SETTER (METHOD(object, var, nil); GLOBAL_SETTER
+#define INSTANCE_VAR_DEF(object, var, def) (call {private _ooRes = (INSTANCE_VAR(object, var)); if (isNil "_ooRes") then {def} else {_ooRes}})
+
 #define GET_CLASS(instance) INSTANCE_VAR(instance, "classname")
 #define IS_INSTANCE_OF(instance, class) (INSTANCE_VAR(instance, "classname") EQTO class)
 
+#define GET_INSTANCE(o) if (o isEqualType "") then {o = call compile o};
 
 /*
 Multiplayer implementation by Vazar
 */
-#define PR private
-#define TARGET_VAR _oopRemoteTarget
+#define TARGET_VARNAME _oopRemoteTarget
+#define TARGET_VAR (if (isNil STR(TARGET_VARNAME)) then {0} else {TARGET_VARNAME})
 #define SV_TARGET_VAR _oopSVtarget
 
+#define SET_JIP(v) PR _oopRemoteJIP = v;
 #define DO_JIP (if (isNil "_oopRemoteJIP") then {false} else {_oopRemoteJIP})
 
-#define SET_TARGET(t) PR TARGET_VAR = t;
-#define GLOBALY PR TARGET_VAR = -clientOwner;
+#define SET_TARGET(t) PR TARGET_VARNAME = t;
+#define GLOBALY PR TARGET_VARNAME = 0;
 
+#define REMOTE_CALL_FUNC "call"
 #define REMOTE_CALLCLASS(className,member,args,access) \
 	(if(isNil "_oopOriginCall")then{ \
-		[[className, [_classID, member, SAFE_VAR(args),access]], {(_this select 1) call GETCLASS((_this select 0))}] remoteExecCall ["call", TARGET_VAR, DO_JIP]  \
+		[ \
+			[ \
+				className, [_ooClassID, member, SAFE_VAR(args),access] \
+			],  \
+			{ \
+				(_this select 1) call GETCLASS((_this select 0)) \
+			} \
+		] remoteExec [REMOTE_CALL_FUNC, TARGET_VAR, DO_JIP]  \
 	}else{  \
-		[[_oopOriginCall, [_classID, member, SAFE_VAR(args),access]], {(_this select 1) call GETCLASS((_this select 0))}] remoteExecCall ["call", TARGET_VAR, DO_JIP] \
+		[ \
+			[ \
+				[_oopOriginCall, [_ooClassID, member, SAFE_VAR(args),access]] \
+			],  \
+			{ \
+				(_this select 1) call GETCLASS((_this select 0)) \
+			} \
+		] remoteExec [REMOTE_CALL_FUNC, TARGET_VAR, DO_JIP] \
+	})
+#define REMOTE_SPAWN_CLASS(className,member,args,access) \
+	(if(isNil "_oopOriginCall")then{ \
+		[ \
+			[ \
+				className, [_ooClassID, member, SAFE_VAR(args),access] \
+			],  \
+			{ \
+				(_this select 1) spawn GETCLASS((_this select 0)) \
+			} \
+		] remoteExec [REMOTE_CALL_FUNC, TARGET_VAR, DO_JIP]  \
+	}else{  \
+		[ \
+			[ \
+				[_oopOriginCall, [_ooClassID, member, SAFE_VAR(args),access]] \
+			],  \
+			{ \
+				(_this select 1) spawn GETCLASS((_this select 0)) \
+			} \
+		] remoteExec [REMOTE_CALL_FUNC, TARGET_VAR, DO_JIP] \
 	})
 
-#define MEMBER_GLOBAL(memberStr,args) MEMBER(memberStr,args); REMOTE_CALLCLASS(_class,memberStr,args,2)
-#define METHOD_GLOBAL(object, method, args) METHOD(object, method, args); ([[method, args], object] remoteExec ["call", TARGET_VAR, DO_JIP])
+#define MEMBER_GLOBAL(memberStr,args) if (clientOwner isEqualTo TARGET_VAR) then {MEMBER(memberStr,args)} else {REMOTE_CALLCLASS(_ooSelfClass,memberStr,args,2)}
+#define METHOD_GLOBAL(object, method, args) if (clientOwner isEqualTo TARGET_VAR) then { \
+	METHOD(object, method, args) \
+} else { \
+	private _ooRemoteInstanceName = INSTANCE_VAR_DEF(object, "InstanceName", object); \
+	if !(_ooRemoteInstanceName isEqualType "") then {_ooRemoteInstanceName = ["classname"] call object}; \
+	if !(_ooRemoteInstanceName isEqualType "") then {_ooRemoteInstanceName = STR(object)}; \
+	[ \
+		[ \
+			_ooRemoteInstanceName, method, args \
+		], \
+		{ \
+			params ["_objectName", "_method", ["_args", []]]; \
+			private _object = NAMESPACE getVariable [_objectName, {}]; \
+			METHOD(_object, _method, _args); \
+		} \
+	] remoteExec [REMOTE_CALL_FUNC, TARGET_VAR, DO_JIP] \
+}
+#define SPAWN_METHOD_GLOBAL(object, method, args) if (clientOwner isEqualTo TARGET_VAR) then { \
+	SPAWN_METHOD(object, method, args) \
+} else { \
+	private _ooRemoteInstanceName = INSTANCE_VAR_DEF(object, "InstanceName", object); \
+	if !(_ooRemoteInstanceName isEqualType "") then {_ooRemoteInstanceName = ["classname"] call object}; \
+	if !(_ooRemoteInstanceName isEqualType "") then {_ooRemoteInstanceName = STR(object)}; \
+	[ \
+		[ \
+			_ooRemoteInstanceName, method, args \
+		], \
+		{ \
+			_this spawn { \
+				params ["_objectName", "_method", ["_args", []]]; \
+				WAIT_A_BIT(!(isNil {NAMESPACE getVariable _objectName})); \
+				private _object = NAMESPACE getVariable [_objectName, {}]; \
+				SPAWN_METHOD(_object, _method, _args); \
+			}; \
+		} \
+	] remoteExec [REMOTE_CALL_FUNC, TARGET_VAR, DO_JIP] \
+}
+// #define MEMBER_GLOBAL(memberStr,args) if (clientOwner isEqualTo TARGET_VAR) then {MEMBER(memberStr,args)} else {METHOD_GLOBAL(_ooSelf, memberStr, args)}
 
-#define MEMBER_TARGET(memberStr,args,targ) MEMBER(memberStr,args); SET_TARGET(targ); MEMBER_GLOBAL(memberStr,args); GLOBALY;
-#define METHOD_TARGET(object, method, args, targ) METHOD(object, method, args); SET_TARGET(targ); METHOD_GLOBAL(object, method, args); GLOBALY;
+#define MEMBER_TARGET(memberStr,args,targ) SET_TARGET(targ); MEMBER_GLOBAL(memberStr,args); GLOBALY;
+#define METHOD_TARGET(object, method, args, targ) SET_TARGET(targ); METHOD_GLOBAL(object, method, args); GLOBALY;
+#define SPAWN_METHOD_TARGET(object, method, args, targ) SET_TARGET(targ); SPAWN_METHOD_GLOBAL(object, method, args); GLOBALY;
+
+#define MEMBER_SERVER(memberStr,args) SET_TARGET(2); MEMBER_GLOBAL(memberStr,args); GLOBALY;
+#define METHOD_SERVER(object, method, args) SET_TARGET(2); METHOD_GLOBAL(object, method, args); GLOBALY;
+#define SPAWN_METHOD_SERVER(object, method, args) SET_TARGET(2); SPAWN_METHOD_GLOBAL(object, method, args); GLOBALY;
 
 
-#define SERVER_FUNCTION(typeStr,fncName) {(isServer && isMultiplayer) && CHECK_MEMBER(fncName)} && {CHECK_TYPE(typeStr)}):
-#define CLIENT_FUNCTION(typeStr,fncName) {(!isServer && isMultiplayer) && CHECK_MEMBER(fncName)} && {CHECK_TYPE(typeStr)}):
+#define SERVER_FUNCTION(typeStr,fncName) (isServer || !isMultiplayer) && FUNCTION(typeStr,fncName)
+#define CLIENT_FUNCTION(typeStr,fncName) (!isServer || !isMultiplayer) && FUNCTION(typeStr,fncName)
 
 
 // VARIABLE SETTER/GETTER
 #define SETTER(typeStr,fncName) {CHECK_MEMBER(fncName)} && {_ooSetType = typeStr; true}):
-#define IF_SET if ((!isNil "_this") && {LWR(typeName _this) == LWR(_ooSetType)}) then
-#define IF_GET else
+#define IF_SET if ((!isNil "_this") && {LWR(typeName _this) == LWR(_ooSetType)}) exitWith {
+#define IF_GET }; // IF_GET SHOULD BE ALWAYS AT THE END OF A SETTER
 
-#ifndef PREFX
-	#define PREFX ""
-#endif
-#define STR(s) #s
-#ifndef SPREF
-	#define SPREF(s) (STR(PREFX) + "_" + t)
-#endif
-#ifndef CLASS_MAIN_OBJ
-	#define CLASS_MAIN_OBJ ""
-#endif
 
-// just variable setter to main object, nothing more
-#define VAR_SETTER(typeStr,fncName,defaultVal) SETTER(typeStr,fncName) { \
-	PR _mainObj = SELF_VAR(CLASS_MAIN_OBJ); \
-	if (isNil "_mainObj") EW {defaultVal}; \
-	IF_SET { \
-		_mainObj SV [SPREF(fncName), _this, _ooVarSetGlobal]; \
-	}  \
-	IF_GET { \
-		_mainObj GV [SPREF(fncName), defaultVal]; \
-	} \
+// variable setter to class main object
+#define OBJECT_VAR_SETTER(typeStr,fncName,defaultVal) SETTER(typeStr,fncName) { \
+	private _ooObjVarSetObject = MGVAR [(format["%1_%2", _ooInstanceID, "SelfObjVarSetterObject"]), objNull]; \
+	private _ooVarSetName = format[(MGVAR [(format["%1_%2", _ooInstanceID, "SelfObjVarSetterPrefix"]), _ooInstanceID])  + "_%1", fncName]; \
+	IF_SET \
+		if (_ooMember == "SelfObjVarSetterPrefix") exitWith {NAMESPACE setVariable [(format["%1_%2", _ooInstanceID, "SelfObjVarSetterPrefix"]), _this, _ooVarSetGlobal]}; \
+		if (_ooMember == "SelfObjVarSetterObject") exitWith {NAMESPACE setVariable [(format["%1_%2", _ooInstanceID, "SelfObjVarSetterObject"]), _this, _ooVarSetGlobal]}; \
+		_ooObjVarSetObject SV [_ooVarSetName, _this, _ooVarSetGlobal]; \
+	IF_GET \
+		_ooObjVarSetObject GV [_ooVarSetName, defaultVal]; \
 };
-#define LOCAL_VAR_SETTER(typeStr,fncName,defaultVal) {_ooVarSetGlobal = false; true} && VAR_SETTER(typeStr,fncName,defaultVal)
-#define GLOBAL_VAR_SETTER(typeStr,fncName,defaultVal) VAR_SETTER(typeStr,fncName,defaultVal)
+#define SET_SETTER_OBJECT(obj) SET_SELF_VAR("SelfObjVarSetterObject", obj)
+#define SET_SETTER_OBJECT_LOCAL(obj) LOCAL_SETTER SET_SELF_VAR("SelfObjVarSetterObject", obj); GLOBAL_SETTER
+
+// variable setter in mission namespace
+#define DEFAULT_SETTER(typeStr,fncName,defaultVal) SETTER(typeStr,fncName) { \
+	private _ooVarSetName = format[(MGVAR [(format["%1_%2", _ooInstanceID, "SelfVarSetterPrefix"]), _ooInstanceID])  + "_%1", fncName]; \
+	IF_SET \
+		if (_ooMember == "SelfVarSetterPrefix") exitWith {NAMESPACE setVariable [(format["%1_%2", _ooInstanceID, "SelfVarSetterPrefix"]), _this, _ooVarSetGlobal]}; \
+		NAMESPACE SV [_ooVarSetName, _this, _ooVarSetGlobal]; \
+	IF_GET \
+		NAMESPACE GV [_ooVarSetName, defaultVal]; \
+};
+#define VARIABLE(typeStr,fncName) DEFAULT_SETTER(typeStr,fncName,nil)
+
+// variable setters for MP
+#define LOCAL_OBJECT_VAR_SETTER(typeStr,fncName,defaultVal) {_ooVarSetGlobal = false; true} && OBJECT_VAR_SETTER(typeStr,fncName,defaultVal)
+#define GLOBAL_OBJECT_VAR_SETTER(typeStr,fncName,defaultVal) OBJECT_VAR_SETTER(typeStr,fncName,defaultVal)
+
+#define LOCAL_VAR_SETTER(typeStr,fncName,defaultVal) {_ooVarSetGlobal = false; true} && DEFAULT_SETTER(typeStr,fncName,defaultVal)
+#define GLOBAL_VAR_SETTER(typeStr,fncName,defaultVal) DEFAULT_SETTER(typeStr,fncName,defaultVal)
+
+
+// ARRAY HANDLING
+
+#define SELF_ARRAY_ADD(var, el) PR _ooTempArray = SELF_VAR_DEF(var, []); \
+	_ooTempArray pushBack el; \
+	SET_SELF_VAR(var, _ooTempArray);
+
+#define SELF_ARRAY_REM(var, el) PR _ooTempArray = SELF_VAR(var); \
+	if (isNil "_ooTempArray") then {SET_SELF_VAR(var, [])} \
+	else {_ooTempArray = _ooTempArray - [el]; SET_SELF_VAR(var, _ooTempArray);} \
+	
+#define INSTANCE_ARRAY_ADD(inst, var, el) PR _ooTempArray = INSTANCE_VAR_DEF(inst, var, []); \
+	_ooTempArray pushBack el; \
+	SET_INSTANCE_VAR(inst, var, _ooTempArray);
+
+#define INSTANCE_ARRAY_REM(inst, var, el) PR _ooTempArray = INSTANCE_VAR(inst, var); \
+	if (isNil "_ooTempArray") then {SET_INSTANCE_VAR(inst, var, [])} \
+	else {_ooTempArray = _ooTempArray - [el]; SET_INSTANCE_VAR(inst, var, _ooTempArray);} \

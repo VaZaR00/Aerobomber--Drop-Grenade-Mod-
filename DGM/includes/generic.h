@@ -8,8 +8,8 @@
 #define MGVAR MN GV
 #define MSVAR MN SV
 #define LOG hint str 
-#define RLOG call {_txt = text format["[RLOG]  %3%4 :: %2 :: %1", _this, serverTime, __FILE_SHORT__, if !(isNil "_member") then {format[".%1", _member]} else {""}]; hint _txt; diag_log _txt};
-#define MP_RLOG call {_txt = (format["%3%4 :: %1 :: %2", serverTime, _this, __FILE_SHORT__, if !(isNil "_member") then {format[".%1", _member]} else {""}]); _txtR = format["[MP_RLOG]  {FROM %1} :: %2", if (isServer) then {"SERVER"} else {clientOwner}, _txt]; _txtR remoteExec ["diag_log", -clientOwner]; _txtR remoteExec ["hint", -clientOwner]; _txt = text format["[MP_RLOG]  %1", _txt]; hint _txt; diag_log _txt};
+#define RLOG call {_txt = text format["[RLOG]  %3%4 :: %2 :: %1", _this, serverTime, __FILE_SHORT__, if !(isNil "_ooMember") then {format[".%1", _ooMember]} else {""}]; hint _txt; diag_log _txt};
+#define MP_RLOG call {_txt = (format["%3%4 :: %1 :: %2", serverTime, _this, __FILE_SHORT__, if !(isNil "_ooMember") then {format[".%1", _ooMember]} else {""}]); _txtR = format["[MP_RLOG]  {FROM %1} :: %2", if (isServer) then {"SERVER"} else {clientOwner}, _txt]; _txtR remoteExec ["diag_log", -clientOwner]; _txtR remoteExec ["hint", -clientOwner]; _txt = text format["[MP_RLOG]  %1", _txt]; hint _txt; diag_log _txt};
 #define NLOG ;
 #define IFLOG call {if (MGVAR ["TEMP_DO_LOG", false]) then {hint str _this; diag_log str _this}};
 #define DOLOG MSVAR ["TEMP_DO_LOG", true];

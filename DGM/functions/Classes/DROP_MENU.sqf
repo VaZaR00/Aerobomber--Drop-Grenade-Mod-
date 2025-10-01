@@ -7,27 +7,27 @@
         All methods and class handling is LOCAL
 */
 
+#define CHECK_DRONE "(alive _target) && {"
 #define IS_MENU_ACTIVE format["(_target getVariable ['%1', false])", SPREF("IsMenuActive")]
 #define IS_CONTROLLING_DRONE_CODE ((vehicle (remoteControlled player)) isEqualTo _target)
 #define IS_CONTROLLING_DRONE STR(IS_CONTROLLING_DRONE_CODE)
 #define SLOTS_AVAILABLE_CODE ((_target GV [VAR_CURR_SLOTS, 0]) < (_target GV [VAR_MAX_SLOTS, 0]))
+#define IS_CONTROLLING_ANY_DRONE !((vehicle (remoteControlled player)) isEqualTo objNull)
 
 #define MAIN_ACTIONS ["MenuAction", "CloseAction", "SetChargeAction"]
 
-#ifdef CLASS_MAIN_OBJ
-	#define CLASS_MAIN_OBJ "Drone"
-#endif
 
 // LOCAL
 CLASS("OO_DROP_MENU") // IOO_DROP_MENU
 
-    PUBLIC VARIABLE("object", "Drone");              // дрон
-    PUBLIC VARIABLE("hashmap", "Actions"); // (hashmap) grenclass : (hashmap) [attach: id, detach: id, drop: id]
-    PUBLIC VARIABLE("scalar", "MenuAction"); // Menu action
-    PUBLIC VARIABLE("scalar", "CloseAction"); // Close Menu action
-    PUBLIC VARIABLE("scalar", "SetChargeAction"); // Set Charge action
-    PUBLIC VARIABLE("array", "AllActions");
-    PUBLIC VARIABLE("code", "DeviceInstance");
+    PUBLIC LOCAL_OBJECT_VAR_SETTER("object", "Drone", objNull);              // дрон
+    PUBLIC LOCAL_OBJECT_VAR_SETTER("hashmap", "Actions", createHashMap); // (hashmap) grenclass : (hashmap) [attach: id, detach: id, drop: id]
+    PUBLIC LOCAL_OBJECT_VAR_SETTER("scalar", "MenuAction", -1); // Menu action
+    PUBLIC LOCAL_OBJECT_VAR_SETTER("scalar", "CloseAction", -1); // Close Menu action
+    PUBLIC LOCAL_OBJECT_VAR_SETTER("scalar", "SetChargeAction", -1); // Set Charge action
+    PUBLIC LOCAL_OBJECT_VAR_SETTER("array", "AllActions", []);
+    PUBLIC LOCAL_OBJECT_VAR_SETTER("code", "DeviceInstance", {});
+    PUBLIC LOCAL_OBJECT_VAR_SETTER("bool", "IsMenuActive", false);
 
 
     PUBLIC FUNCTION("array", "constructor") {
@@ -41,7 +41,11 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
             {}
         };
 
-        PR _deviceInst = _drone GV ["DGM_deviceInstance", {}];
+        PR _deviceInst = _drone GV [QPREF(deviceInstance), {}];
+
+        LOCAL_SETTER
+        MEMBER("SelfObjVarSetterObject", _drone);
+        MEMBER("SelfObjVarSetterPrefix", STR(PREFX));
 
         MEMBER("Drone", _drone);
         MEMBER("Actions", createHashMap);
@@ -55,9 +59,9 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
             MEMBER("addActionCharge", nil);
         };
 
-		_drone setVariable ["DGM_menuInstance", _instance];
+		_drone setVariable ["DGM_menuInstance", _ooSelf];
 
-        _instance
+        _ooSelf
     };
 
     PUBLIC FUNCTION("any", "deconstructor") {
@@ -71,8 +75,6 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
 		_drone setVariable ["DGM_menuInstance", nil];
     }; 
 
-    PUBLIC LOCAL_VAR_SETTER("bool", "IsMenuActive", false);
-
     PUBLIC FUNCTION("any", "addActionMenu") {
         // Menu Action
         PR _arg = [
@@ -83,8 +85,8 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
                 _arguments params ["_menuInstance"];
                 METHOD(_menuInstance, "SetMenuActive", true);
             },
-            [_instance],
-            format["!(%1) && !(%2)", IS_MENU_ACTIVE, IS_CONTROLLING_DRONE],
+            [_ooSelf],
+            format[CHECK_DRONE + "!(%1) && !(%2) && !(%3)" + "}", IS_MENU_ACTIVE, IS_CONTROLLING_ANY_DRONE, IS_CONTROLLING_DRONE],
             5
         ];
         MEMBER("addAction", _arg);
@@ -100,8 +102,8 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
                 _arguments params ["_menuInstance"];
                 METHOD(_menuInstance, "SetMenuActive", false);
             },
-            [_instance],
-            format["(%1) && !(%2)", IS_MENU_ACTIVE, IS_CONTROLLING_DRONE],
+            [_ooSelf],
+            format[CHECK_DRONE + "(%1) && !(%2)" + "}", IS_MENU_ACTIVE, IS_CONTROLLING_ANY_DRONE],
             5
         ];
         MEMBER("addAction", _arg);
@@ -119,13 +121,13 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
                 params ["_target", "_caller", "_actionId", "_arguments"];
                 _arguments params ["_menuInstance"];
 
-		        PR _deviceInst = _target GV ["DGM_deviceInstance", {}];
+		        PR _deviceInst = _target GV [QPREF(deviceInstance), {}];
 
                 METHOD(_deviceInst, "ChangeCharge", nil);
                 METHOD(_menuInstance, "addActionCharge", nil);
             },
-            [_instance],
-            format["((%1) || (%2)) && (%3)", IS_MENU_ACTIVE, IS_CONTROLLING_DRONE, "_target getVariable ['DGM_CanSetCharge', false]"],
+            [_ooSelf],
+            format[CHECK_DRONE + "((%1) || (%2)) && (%3)" + "}", IS_MENU_ACTIVE, IS_CONTROLLING_DRONE, "_target getVariable ['DGM_CanSetCharge', false]"],
             4,
             "",
             _currentCharge
@@ -156,16 +158,16 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
                     SHOW_HINT LBL_CANT_ADD_MORE_GREN;
                 };
 
-		        PR _deviceInst = _target GV ["DGM_deviceInstance", {}];
+		        PR _deviceInst = _target GV [QPREF(deviceInstance), {}];
                 PR _currentCount = METHOD(_deviceInst, "getGrenAmount", _grenClass);
 
                 ["DGM_attachGrenEvent", [_target, _grenClass, _caller, 1, _currentCount]] call CBA_fnc_globalEvent;
             },
             [_itemClass],
             format[
-                "(%1) && {!(%2) && {(call %3) && {(call %4)}}}", 
+                CHECK_DRONE + "(%1) && {!(%2) && {(call %3) && {(call %4)}}}" + "}", 
                 IS_MENU_ACTIVE, 
-                IS_CONTROLLING_DRONE, 
+                IS_CONTROLLING_ANY_DRONE, 
                 {SLOTS_AVAILABLE_CODE}, 
                 {!(isNil "DGM_currentGrenadesListCounts") && {!ARR_EMPTY(DGM_currentGrenadesListCounts)}}],
             2,
@@ -186,14 +188,14 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
                 params ["_target", "_caller", "_actionId", "_arguments"];
                 _arguments params ["_grenClass"];
 
-		        PR _deviceInst = _target GV ["DGM_deviceInstance", {}];
+		        PR _deviceInst = _target GV [QPREF(deviceInstance), {}];
                 PR _currentCount = METHOD(_deviceInst, "getGrenAmount", _grenClass);
                 PR _num = 1;
 
                 ["DGM_detachGrenEvent", [_target, _grenClass, _num, _caller, _currentCount]] call CBA_fnc_globalEvent;
             },
             [_this],
-            format["(%1) && !(%2)", IS_MENU_ACTIVE, IS_CONTROLLING_DRONE],
+            format[CHECK_DRONE + "(%1) && !(%2)" + "}", IS_MENU_ACTIVE, IS_CONTROLLING_ANY_DRONE],
             4,
             _this
         ];
@@ -212,7 +214,7 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
                 params ["_target", "_caller", "_actionId", "_arguments"];
                 _arguments params ["_grenClass"];
 
-		        PR _deviceInst = _target GV ["DGM_deviceInstance", {}];
+		        PR _deviceInst = _target GV [QPREF(deviceInstance), {}];
                 PR _currentCount = METHOD(_deviceInst, "getGrenAmount", _grenClass);
                 PR _num = INSTANCE_VAR(_deviceInst, "DropCharge");
 
@@ -223,7 +225,7 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
                 ["DGM_dropGrenEvent", [_target, _grenClass, _num, remoteControlled _caller, _currentCount]] call CBA_fnc_globalEvent;
             },
             [_this],
-            format["(%1)", IS_CONTROLLING_DRONE],
+            format[CHECK_DRONE + "(%1)" + "}", IS_CONTROLLING_DRONE],
             3,
             _this
         ];
@@ -300,7 +302,7 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
         if (_this) then {
             MEMBER("LoadGrensMenu", nil);
 
-            PR _this = [SELF_VAR("Drone"), _instance];
+            PR _this = [SELF_VAR("Drone"), _ooSelf];
             ENSURE_SPAWN_ONCE_START
                 params ["_target", "_menuInstance"];
                 PR _inventoryDisplay = 602;
@@ -326,14 +328,14 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
 
     PUBLIC FUNCTION("string", "grenadeAvailable") {
         private _drone = SELF_VAR("Drone");
-	    private _deviceInst = _drone GV ["DGM_deviceInstance", {}];
+	    private _deviceInst = _drone GV [QPREF(deviceInstance), {}];
         
         METHOD(_deviceInst, "grenadeAvailable", _this);
     };
 
     PUBLIC FUNCTION("string", "getGrenAmount") {
         private _drone = SELF_VAR("Drone");
-	    private _deviceInst = _drone GV ["DGM_deviceInstance", {}];
+	    private _deviceInst = _drone GV [QPREF(deviceInstance), {}];
         
         METHOD(_deviceInst, "getGrenAmount", _this);
     };
@@ -346,7 +348,7 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
 
         PR _action = SELF_VAR(_type);
 
-        if !(isNil "_action") exitWith {true};
+        if (!(isNil "_action") && {(_action isEqualType 1) && {(_action != -1)}}) exitWith {true};
         
         PR _grenActions = SELF_VAR("Actions") get _type;
         if (isNil "_grenActions") exitWith {false};
@@ -461,7 +463,7 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
         DGM_currentGrenadesListCounts = nil;
 
 	    PR _drone = SELF_VAR("Drone");
-	    PR _deviceInst = _drone GV ["DGM_deviceInstance", {}];
+	    PR _deviceInst = _drone GV [QPREF(deviceInstance), {}];
 	    PR _actions = SELF_VAR("Actions");
 	    PR _currentMenuGrenades = keys _actions;
 

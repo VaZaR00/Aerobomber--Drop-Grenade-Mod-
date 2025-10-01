@@ -10,9 +10,9 @@ FUNC(attachGrenEvent) = {
 
 		// on mission init its better to wait until device instance created
 		// because server may do it faster and trigger event before instance created localy
-		waitUntil { !(isNil {DGVAR "DGM_deviceInstance"}) && !(isNil {DGVAR "DGM_menuInstance"}) };
+		waitUntil { !(isNil {DGVAR QPREF(deviceInstance)}) && !(isNil {DGVAR "DGM_menuInstance"}) };
 
-		PR _deviceInst = DGVAR ["DGM_deviceInstance", {}];
+		PR _deviceInst = DGVAR [QPREF(deviceInstance), {}];
 		PR _menuInst = DGVAR ["DGM_menuInstance", {}];
 
 		if (local _drone) then {
@@ -40,7 +40,7 @@ FUNC(detachGrenEvent) = {
 
 		params["_drone", "_grenClass", ["_num", 1], ["_caller", player, [player]], ["_currentCount", -1]];
 
-		PR _deviceInst = _drone GV ["DGM_deviceInstance", {}];
+		PR _deviceInst = _drone GV [QPREF(deviceInstance), {}];
 		PR _menuInst = _drone GV ["DGM_menuInstance", {}];
 
 		if (local _drone) then {
@@ -66,7 +66,7 @@ FUNC(dropGrenEvent) = {
 
 		params["_drone", "_grenClass", ["_num", 1], ["_caller", player, [player]], ["_currentCount", -1]];
 
-		PR _deviceInst = _drone GV ["DGM_deviceInstance", {}];
+		PR _deviceInst = _drone GV [QPREF(deviceInstance), {}];
 		PR _menuInst = _drone GV ["DGM_menuInstance", {}];
 
 		if (local _drone) then {

@@ -5,6 +5,7 @@ class CfgRemoteExec
         class DGM_fnc_dropDevice { allowedTargets = 0; };
         class DGM_fnc_removeDropDevice { allowedTargets = 0; };
         class DGM_fnc_setSlotsNumber { allowedTargets = 0; };
+		class DGM_fnc_remoteCall { allowedTargets = 0; };
     };
     class Commands
 	{

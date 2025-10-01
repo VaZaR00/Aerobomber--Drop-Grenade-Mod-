@@ -9,6 +9,6 @@
 
 params["_drone", "_num"];
 
-PR _deviceInst = _drone GV ["DGM_deviceInstance", {}];
+PR _deviceInst = _drone GV [QPREF(deviceInstance), {}];
 
 METHOD(_deviceInst, "setSlotsNumber", _num);
