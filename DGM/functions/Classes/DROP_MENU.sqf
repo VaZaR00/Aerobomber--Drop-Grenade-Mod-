@@ -346,7 +346,7 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
 
         if (_type == "") exitWith {false};
 
-        PR _action = SELF_VAR(_type);
+        PR _action = if (_type in MAIN_ACTIONS) then {SELF_VAR(_type)} else {""};
 
         if (!(isNil "_action") && {(_action isEqualType 1) && {(_action != -1)}}) exitWith {true};
         
