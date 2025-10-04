@@ -126,7 +126,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	See Also:
 		<CLASSEXTENDS>
 */
-#define CLASS(className) INSTANTIATE_CLASS(className, "No Parent") default { throw [ERR_UNDEFMEMBER, _ooSelfClass, _ooMember, _ooArgType]; };
+#define CLASS(className) INSTANTIATE_CLASS(className, "No Parent") default { throw [ERR_UNDEFMEMBER, SAFE_VAR(_ooSelfClass), SAFE_VAR(_ooMember), SAFE_VAR(_ooArgType), SAFE_VAR(_this), SAFE_VAR(_ooInstanceName), SAFE_VAR(_ooInstanceID), SAFE_VAR(_ooSelf), SAFE_VAR(_objectName), SAFE_VAR(_method), SAFE_VAR(_args)]; };
 
 /*
 	Macro: CLASS_EXTENDS(childClassName,parentClassName)
@@ -340,12 +340,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define FINALIZE_CLASS };};};};} catch { \
 	switch (_exception select 0) do { \
 		case ERR_UNDEFMEMBER : { \
-			format ['ERROR UNDEF : %1("%3","%2")', _exception select 1, _exception select 2, _exception select 3] call BIS_fnc_error; \
-			format ['ERROR UNDEF : %1("%3","%2")', _exception select 1, _exception select 2, _exception select 3] _LOG \
+			[format ['ERROR UNDEF : %1("%3","%2")', _exception select 1, _exception select 2, _exception select 3], _exception] _LOG \
 		}; \
 		default { \
-			format ['EXCEPTION : %1', _exception select 1] call BIS_fnc_error; \
-			format ['EXCEPTION : %1', _exception select 1] _LOG \
+			[format ['EXCEPTION : %1', _exception select 1], _exception] _LOG \
 		}; \
 	}; \
 }}] 
