@@ -41,8 +41,8 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
     PUBLIC OBJECT_VAR_SETTER("scalar", "MPKilledId", -1);
     PUBLIC OBJECT_VAR_SETTER("bool", "CanSetCharge", false);
     PUBLIC OBJECT_VAR_SETTER("scalar", "DropCharge", 1);
-    PUBLIC OBJECT_VAR_SETTER("scalar", "Z_offset");            
-    PUBLIC OBJECT_VAR_SETTER("scalar", "TempAttachGrenOffset");       
+    PUBLIC OBJECT_VAR_SETTER("scalar", "Z_offset", -0.45);            
+    PUBLIC OBJECT_VAR_SETTER("scalar", "TempAttachGrenOffset", -0.2);       
 
 
     // METHODS
