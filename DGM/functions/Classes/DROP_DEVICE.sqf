@@ -19,8 +19,6 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
     PUBLIC VARIABLE("bool", "RemoveChemlights");          
     PUBLIC VARIABLE("bool", "RemoveSmokes");          
     PUBLIC VARIABLE("array", "AllowedGrenList");     
-    PUBLIC VARIABLE("scalar", "Z_offset");            
-    PUBLIC VARIABLE("scalar", "TempAttachGrenOffset");       
 
     // VARIABLE SETTERS
     /*
@@ -43,6 +41,8 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
     PUBLIC OBJECT_VAR_SETTER("scalar", "MPKilledId", -1);
     PUBLIC OBJECT_VAR_SETTER("bool", "CanSetCharge", false);
     PUBLIC OBJECT_VAR_SETTER("scalar", "DropCharge", 1);
+    PUBLIC OBJECT_VAR_SETTER("scalar", "Z_offset");            
+    PUBLIC OBJECT_VAR_SETTER("scalar", "TempAttachGrenOffset");       
 
 
     // METHODS
@@ -74,7 +74,6 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
         MEMBER("SelfObjVarSetterPrefix", STR(PREFX));
 
         MEMBER("Drone", _drone);
-        MEMBER("SpawnTempGren", _spawnTempGren);
         MEMBER("AddedItems", _addedItems);
         MEMBER("RemovedItems", _removedItems);
         MEMBER("CustomList", _customList);
@@ -86,6 +85,7 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
         MEMBER("AllowedGrenList", _customList);
 
         MEMBER("DefineAttachParams", nil);
+        MEMBER("SpawnTempGren", _spawnTempGren);
         ARGS [_customList, _addedItems, _removedItems, _allowOnlyListed, _removeChemlights, _removeSmokes];
         METHOD_GLOBAL(_ooSelf, "DefineAllowedGrens", _args);
 
@@ -140,6 +140,9 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
             };
             case ("mavik" in _drType): {
                 [_spwnDef, -0.075, -0.3]
+            };
+            case ("UAV_Vampire" in _drType): {
+                [_spwnDef, -0.69, -0.8]
             };
             default {
                 [false, -0.2, -0.45]
@@ -379,7 +382,7 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
                 _velocity = [0, 0 ,0];
             };
         } else {
-            _vectorDirUp = [[0,0,-1],[0.1,0.1,1]];
+            _vectorDirUp = [];
             _velocity = [(_droneVelocity select 0) / _velCoef, (_droneVelocity select 1) / _velCoef ,-2];
         };
 
@@ -396,7 +399,16 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
             } else {
                 _gren setVelocity _velocity;
             };
-            _gren setVectorDirandUp _vectorDirUp;
+
+            if (_vectorDirUp isEqualTo []) then {
+                private _angle = switch (_item) do {
+                    case "tbd_mortar_82mm_shell_ammo_he": {90};
+                    default {-90};
+                };
+                [_gren, _angle, 0] call BIS_fnc_setPitchBank;
+            } else {
+                _gren setVectorDirandUp _vectorDirUp;
+            };
 
             if ((_num > 1) && (_i < _num)) then {
                 PR _randVel = (MGVAR ["DGM_randomVelocity", 0.15]);
@@ -424,12 +436,13 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
         if !(SELF_VAR("TempAttachedGren") isEqualTo objNull) EX;
 
         PR _drone = SELF_VAR("Drone");
+        private _droneType = toLower (typeOf _drone);
 
         ITEM_DATA(_item);
 
         PR _zOffset = SELF_VAR("TempAttachGrenOffset");
         //for specific grens on mavik there is special offset
-        if ("mavik" in (typeOf _drone)) then {
+        if ("mavik" in _droneType) then {
             if (
                 ("og25" in _item) or
                 ("433" in _item) or
@@ -444,6 +457,13 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
                 _zOffset = -0.04;
             };
         }; 
+
+        if (_droneType isEqualTo "mmm_uav_vampire") then {
+            _drone setPylonLoadout [1, "", true];
+            _drone setPylonLoadout [1, "MMM_Pylon_Vampire_120mm_1x", true];
+            _drone setAmmoOnPylon [1, 0];
+        };
+
         PR _gren = createSimpleObject [_itemModel, [0,0,0]];
         _gren attachTo [_drone, [0,0,_zOffset]];
 
