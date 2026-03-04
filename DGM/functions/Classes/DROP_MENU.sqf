@@ -489,8 +489,7 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
             } forEach _playerGrens;
 
         (_currentMenuGrenades select {!(_x in _playerGrens)}) apply {
-            PR _grenActions = MEMBER("getGrenActions", _x); 
-            MEMBER("removeAction", _grenActions getOrDefault ["AttachId" C -1]);
+            MEMBER("removeGrenActions", _x);
         };
 
         _playerGrens
