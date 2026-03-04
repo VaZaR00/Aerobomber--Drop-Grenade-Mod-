@@ -9,4 +9,4 @@
 
 params["_drone", "_grenClass", ["_num", 1]];
 
-["DGM_dropGrenEvent", [_drone, _grenClass, _num, objNull, 0]] call CBA_fnc_globalEvent;
+["DGM_fnc_dropGrenEvent", [_drone, _grenClass, _num, objNull, 0], 0, _drone] call DGM_fnc_event;

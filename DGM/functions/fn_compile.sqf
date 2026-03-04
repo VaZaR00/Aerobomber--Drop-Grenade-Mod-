@@ -10,7 +10,8 @@ FUNC(attachGrenEvent) = {
 
 		// on mission init its better to wait until device instance created
 		// because server may do it faster and trigger event before instance created localy
-		waitUntil { !(isNil {DGVAR QPREF(deviceInstance)}) && !(isNil {DGVAR "DGM_menuInstance"}) };
+		waitUntil { !(isNil {DGVAR "DGM_menuInstance"}) };
+		waitUntil { !(isNil {DGVAR QPREF(deviceInstance)}) };
 
 		PR _deviceInst = DGVAR [QPREF(deviceInstance), {}];
 		PR _menuInst = DGVAR ["DGM_menuInstance", {}];
@@ -26,7 +27,7 @@ FUNC(attachGrenEvent) = {
 
 		// wait until amount updated globaly
 		waitUntil { (METHOD(_deviceInst, "getGrenAmount", _grenClass)) != _currentCount };
-		
+
 		FOR_I(_num) {
 			METHOD(_menuInst, "addActionDrop", _grenClass);
 			METHOD(_menuInst, "addActionDetach", _grenClass);

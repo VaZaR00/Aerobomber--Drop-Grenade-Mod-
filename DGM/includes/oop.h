@@ -433,9 +433,7 @@ Multiplayer implementation by Vazar
 	})
 
 #define MEMBER_GLOBAL(memberStr,args) if (clientOwner isEqualTo TARGET_VAR) then {MEMBER(memberStr,args)} else {REMOTE_CALLCLASS(_ooSelfClass,memberStr,args,2)}
-#define METHOD_GLOBAL(object, method, args) if (clientOwner isEqualTo TARGET_VAR) then { \
-	METHOD(object, method, args) \
-} else { \
+#define METHOD_GLOBAL(object, method, args) call {\
 	private _ooRemoteInstanceName = INSTANCE_VAR_DEF(object, "InstanceName", object); \
 	if !(_ooRemoteInstanceName isEqualType "") then {_ooRemoteInstanceName = ["classname"] call object}; \
 	if !(_ooRemoteInstanceName isEqualType "") then {_ooRemoteInstanceName = STR(object)}; \
@@ -446,13 +444,12 @@ Multiplayer implementation by Vazar
 		{ \
 			params ["_objectName", "_method", ["_args", []]]; \
 			private _object = NAMESPACE getVariable [_objectName, {}]; \
+			diag_log format["[DGM] Remote call: %1.%2 with args: %3", _objectName, _method, _args]; \
 			METHOD(_object, _method, _args); \
 		} \
 	] remoteExec [REMOTE_CALL_FUNC, TARGET_VAR, DO_JIP] \
 }
-#define SPAWN_METHOD_GLOBAL(object, method, args) if (clientOwner isEqualTo TARGET_VAR) then { \
-	SPAWN_METHOD(object, method, args) \
-} else { \
+#define SPAWN_METHOD_GLOBAL(object, method, args) call { \
 	private _ooRemoteInstanceName = INSTANCE_VAR_DEF(object, "InstanceName", object); \
 	if !(_ooRemoteInstanceName isEqualType "") then {_ooRemoteInstanceName = ["classname"] call object}; \
 	if !(_ooRemoteInstanceName isEqualType "") then {_ooRemoteInstanceName = STR(object)}; \
@@ -463,7 +460,7 @@ Multiplayer implementation by Vazar
 		{ \
 			_this spawn { \
 				params ["_objectName", "_method", ["_args", []]]; \
-				WAIT_A_BIT(!(isNil {NAMESPACE getVariable _objectName})); \
+				waitUntil {(!(isNil {NAMESPACE getVariable _objectName}))}; \
 				private _object = NAMESPACE getVariable [_objectName, {}]; \
 				SPAWN_METHOD(_object, _method, _args); \
 			}; \

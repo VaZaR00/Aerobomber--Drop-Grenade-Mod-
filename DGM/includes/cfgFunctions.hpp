@@ -16,6 +16,8 @@ class CfgFunctions
             class dropGren {};
             class attachGren {};
             class allowSetCharge {};
+            class event {};
+            class remoteCall {};
         };
     };
 };

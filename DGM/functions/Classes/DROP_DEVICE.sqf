@@ -86,17 +86,18 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
 
         MEMBER("DefineAttachParams", nil);
         MEMBER("SpawnTempGren", _spawnTempGren);
+
         ARGS [_customList, _addedItems, _removedItems, _allowOnlyListed, _removeChemlights, _removeSmokes];
+        MEMBER("DefineAllowedGrens", _args);
 
         SET_JIP(true);
-        METHOD_GLOBAL(_ooSelf, "DefineAllowedGrens", _args);
-        METHOD_GLOBAL(OO_DROP_MENU, "new", [_drone]);
+        SPAWN_METHOD_GLOBAL(OO_DROP_MENU, "new", [_drone]);
 
         if !(_spawnWithGren isEqualTo "") then {
             if (_spawnTempGren) then {
                 MEMBER("SpawnAttachedGren", _spawnWithGren);
             };
-            ["DGM_attachGrenEvent", [_drone, _spawnWithGren, objNull, _slotNum, 0]] call CBA_fnc_globalEvent;
+            ["DGM_fnc_attachGrenEvent", [_drone, _spawnWithGren, objNull, _slotNum, 0], 0, _drone] call DGM_fnc_event;
         };
 
         // Killed Event Handler to call deconstructor
@@ -120,7 +121,7 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
 
         // call DROP_MENU deconstructor globaly
         SET_JIP(true);
-        METHOD_GLOBAL(_ooSelf, "destroyMenu", _drone);
+        SPAWN_METHOD_GLOBAL(_ooSelf, "destroyMenu", _drone);
 
 		_drone setVariable [QPREF(deviceInstance), nil, true];
     };
@@ -269,9 +270,7 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
 
         CLR_DUPS(_grenList);
 
-        LOCAL_SETTER
         MEMBER("AllowedGrenList", _grenList);
-        GLOBAL_SETTER
 
         _grenList
     };

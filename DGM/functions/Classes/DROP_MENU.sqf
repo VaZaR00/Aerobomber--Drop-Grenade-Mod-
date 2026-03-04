@@ -161,7 +161,7 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
 		        PR _deviceInst = _target GV [QPREF(deviceInstance), {}];
                 PR _currentCount = METHOD(_deviceInst, "getGrenAmount", _grenClass);
 
-                ["DGM_attachGrenEvent", [_target, _grenClass, _caller, 1, _currentCount]] call CBA_fnc_globalEvent;
+                ["DGM_fnc_attachGrenEvent", [_target, _grenClass, _caller, 1, _currentCount], 0, _target] call DGM_fnc_event;
             },
             [_itemClass],
             format[
@@ -192,7 +192,7 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
                 PR _currentCount = METHOD(_deviceInst, "getGrenAmount", _grenClass);
                 PR _num = 1;
 
-                ["DGM_detachGrenEvent", [_target, _grenClass, _num, _caller, _currentCount]] call CBA_fnc_globalEvent;
+                ["DGM_fnc_detachGrenEvent", [_target, _grenClass, _num, _caller, _currentCount], 0, _target] call DGM_fnc_event;
             },
             [_this],
             format[CHECK_DRONE + "(%1) && !(%2)" + "}", IS_MENU_ACTIVE, IS_CONTROLLING_ANY_DRONE],
@@ -222,7 +222,7 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
                     _num = _currentCount;
                 };
 
-                ["DGM_dropGrenEvent", [_target, _grenClass, _num, remoteControlled _caller, _currentCount]] call CBA_fnc_globalEvent;
+                ["DGM_fnc_dropGrenEvent", [_target, _grenClass, _num, remoteControlled _caller, _currentCount], 0, _target] call DGM_fnc_event;
             },
             [_this],
             format[CHECK_DRONE + "(%1)" + "}", IS_CONTROLLING_DRONE],
