@@ -13,35 +13,40 @@ if (is3DEN) exitWith {};
 [_logic] spawn {
 	params["_logic"];
 
-	private _syncedObj = (synchronizedObjects _logic)#0;
+	sleep 0.1;	
 
-	if (isNil "_syncedObj") then {
-		_syncedObj = objNull;
+	private _syncedObjs = (synchronizedObjects _logic);
+
+	private _mainObject = missionNamespace getVariable [(LGVAR ["Object", ""]), objNull];
+
+	if !(isNil "_mainObject") then {
+		if (_mainObject isEqualType objNull) then {
+			if !(_mainObject isEqualTo objNull) then {
+				_syncedObjs pushBackUnique _mainObject;
+			};
+		};
 	};
+	
+	{
+		private _obj = _x;
 
-	sleep 0.1;
+		if (isNil "_obj") then {continue};
+		if !(_obj isEqualType objNull) then {continue};
+		if (isNull _obj) then {continue};
+		if !(local _obj) then {continue};
 
-	private _object = call compile (LGVAR ["Object", ""]);
-
-	if ((isNil "_object") || {!(_object isEqualType objNull)}) then {
-		_object = _syncedObj;
-	};
-
-	if ((isNil "_object") || {(_object isEqualTo objNull)}) exitWith {};
-
-	if !(local _object) exitWith {};
-
-	[
-		_object,
-		LGVAR ["slotNum", 1],
-		LGVAR ["spawnWithGren", "HandGrenade"],
-		LGVAR ["addedItems", ""],
-		LGVAR ["removedItems", ""],
-		BOOL("allowSetCharge", 0),
-		BOOL("spawnTempGren", 1),
-		BOOL("allowOnlyListed", 0),
-		BOOL("removeChemlights", 1),
-		BOOL("removeSmokes", 1)
-	] call DGM_fnc_dropDevice;
+		[
+			_obj,
+			LGVAR ["slotNum", 1],
+			LGVAR ["spawnWithGren", "HandGrenade"],
+			LGVAR ["addedItems", ""],
+			LGVAR ["removedItems", ""],
+			BOOL("allowSetCharge", 0),
+			BOOL("spawnTempGren", 1),
+			BOOL("allowOnlyListed", 0),
+			BOOL("removeChemlights", 1),
+			BOOL("removeSmokes", 1)
+		] call DGM_fnc_dropDevice;
+	} forEach _syncedObjs;
 };
 
