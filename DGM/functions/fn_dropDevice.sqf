@@ -13,8 +13,6 @@ FILE_ONLY_SPAWN
 
 sleep 0.1;
 
-WAIT_THIS_SCRIPT
-
 PR _obj = _this select 0;
 
 if ((isNil "_obj") || {!(_obj isEqualType objNull) || {(_obj isEqualTo objNull)}}) exitWith {};
