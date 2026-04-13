@@ -398,7 +398,6 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
         FOR_I(_num) {
             PR _pos = _drone modelToWorldVisual [_randPos#0,_randPos#0, _zOffset];
             _gren = _itemAmmo createvehicle _pos;
-            private _grenPosASL = getPosASL _gren;
             [_gren, [_drone, player]] remoteExec ["setShotParents", 2];
 
             if (_vectorDirUp isEqualTo []) then {
@@ -417,8 +416,6 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
                 _gren setVelocity _velocity;
             };
 
-            ["DROP", _drone, _item, _num, _gren, [_randPos#0,_randPos#0, _zOffset], _velocity, _vectorDirUp] RLOG
-
             if ((_num > 1) && (_i < _num)) then {
                 PR _randVel = (MGVAR ["DGM_randomVelocity", 0.15]);
                 PR _randOffset = (MGVAR ["DGM_randomOffset", 0.05]);
@@ -433,7 +430,7 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
 
         MEMBER("TempDropGren", _gren);
 
-		// SHOW_HINT TXT_DROPED;
+		SHOW_HINT TXT_DROPED;
 
         _gren
     }; 
