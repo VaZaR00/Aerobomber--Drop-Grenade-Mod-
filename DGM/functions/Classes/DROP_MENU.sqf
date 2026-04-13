@@ -65,7 +65,7 @@ CLASS("OO_DROP_MENU") // IOO_DROP_MENU
     };
 
     PUBLIC FUNCTION("any", "deconstructor") {
-
+        private _drone = SELF_VAR("Drone");
 		{
             MEMBER("removeAction", _x)
         } forEach SELF_VAR("AllActions");

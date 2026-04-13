@@ -359,22 +359,27 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
 
         PR _droneVelocity = velocity _drone;
         PR _zOffset = SELF_VAR("Z_offset");
-        PR _velCoef = 1.5;
+        PR _velCoef = 1;
         PR _vectorDirUp = [];
         PR _velocity = [];
         PR _velocityModelSpace = [];
         PR _gren = objNull;
 
+        private _shootRocketsClasnamesFuncCond = {
+            if ("PG7" in _this) exitWith {true};
+            if ("OG7" in _this) exitWith {true};
+            if ("TPG7" in _this) exitWith {true};
+            if ("type6" in _this) exitWith {true};
+            if ("RPG32" in _this) exitWith {true};
+            if ("Vorona" in _this) exitWith {true};
+            if ("fgm" in _this) exitWith {true};
+            if ("itan" in _this) exitWith {true};
+            false
+        };
+
         if (
             (missionNamespace getVariable ["DGM_shoot_rockets", true]) &&
-            {("PG7" in _item) or
-            ("OG7" in _item) or
-            ("TPG7" in _item) or
-            ("type6" in _item) or
-            ("RPG32" in _item) or
-            ("Vorona" in _item) or
-            ("fgm" in _item) or
-            ("itan" in _item)}
+            {_item call _shootRocketsClasnamesFuncCond}
         ) then {
             _vectorDirUp = [vectorDir _drone,[0.1,0.1,1]];
             if ("OG7" in _item) then {
@@ -384,22 +389,17 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
             };
         } else {
             _vectorDirUp = [];
-            _velocity = [(_droneVelocity select 0) / _velCoef, (_droneVelocity select 1) / _velCoef ,-2];
+            _velocity = _droneVelocity apply {_x / _velCoef};
         };
 
         PR _randPos = [0,0];
         PR _originVelocity = +_velocity;
 
         FOR_I(_num) {
-            PR _pos = _drone modelToWorld [_randPos#0,_randPos#0, _zOffset];
+            PR _pos = _drone modelToWorldVisual [_randPos#0,_randPos#0, _zOffset];
             _gren = _itemAmmo createvehicle _pos;
+            private _grenPosASL = getPosASL _gren;
             [_gren, [_drone, player]] remoteExec ["setShotParents", 2];
-
-            if !(_velocityModelSpace isEqualTo []) then {
-                _gren setVelocityModelSpace _velocityModelSpace;
-            } else {
-                _gren setVelocity _velocity;
-            };
 
             if (_vectorDirUp isEqualTo []) then {
                 private _angle = switch (_item) do {
@@ -410,6 +410,14 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
             } else {
                 _gren setVectorDirandUp _vectorDirUp;
             };
+
+            if !(_velocityModelSpace isEqualTo []) then {
+                _gren setVelocityModelSpace _velocityModelSpace;
+            } else {
+                _gren setVelocity _velocity;
+            };
+
+            ["DROP", _drone, _item, _num, _gren, [_randPos#0,_randPos#0, _zOffset], _velocity, _vectorDirUp] RLOG
 
             if ((_num > 1) && (_i < _num)) then {
                 PR _randVel = (MGVAR ["DGM_randomVelocity", 0.15]);
@@ -425,7 +433,7 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
 
         MEMBER("TempDropGren", _gren);
 
-		SHOW_HINT TXT_DROPED;
+		// SHOW_HINT TXT_DROPED;
 
         _gren
     }; 
@@ -441,20 +449,24 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
 
         ITEM_DATA(_item);
 
+        private _mavicSpecGrenOffsetFunc = {
+            if ("og25" in _this) exitWith {true};
+            if ("433" in _this) exitWith {true};
+            if ("441" in _this) exitWith {true};
+            if ("Rnd_HE" in _this) exitWith {true};
+            if ("M58" in _this) exitWith {true};
+            if ("M66" in _this) exitWith {true};
+            if ("og25" in _this) exitWith {true};
+            if ("M71" in _this) exitWith {true};
+            if ("VG40" in _this) exitWith {true};
+            if ("Mavic_F1" in _this) exitWith {true};
+            false
+        };
+
         PR _zOffset = SELF_VAR("TempAttachGrenOffset");
         //for specific grens on mavik there is special offset
         if ("mavik" in _droneType) then {
-            if (
-                ("og25" in _item) or
-                ("433" in _item) or
-                ("441" in _item) or
-                ("Rnd_HE" in _item) or
-                ("M58" in _item) or
-                ("M66" in _item) or
-                ("M71" in _item) or
-                ("VG40" in _item) or
-                ("Mavic_F1" in _item)
-            ) then {
+            if (_item call _mavicSpecGrenOffsetFunc) then {
                 _zOffset = -0.04;
             };
         }; 
