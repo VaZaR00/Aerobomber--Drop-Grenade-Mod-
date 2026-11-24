@@ -1,28 +1,104 @@
-#include "defines.h"
+#include "defines.hpp"
 
-PR _expArr = [];
-PR _ammoCfg = [];
+/*
+    Function: DGM_fnc_getAllExp
 
-PR _ammoCfgEnt = "true" configClasses (configFile >> "CfgAmmo");
-PR _magCfgEnt = "true" configClasses (configFile >> "CfgMagazines");
-{
-	PR _elcfg = _x;
-	PR _el = configName _elcfg;
-	PR _elPar = [configFile >> "CfgMagazines" >> _el, true] call BIS_fnc_returnParents;
-	if (count _elPar > 3) then {
-		PR _el3 = _elPar select -3;
-		if ((_el3 == "1Rnd_HE_Grenade_shell") || (_el3 == "HandGrenade")) then {
-			PR _toArr = _elPar select 0;
-			_expArr pushBack _toArr;
-		};
-	};
-}forEach _magCfgEnt;
+    Description:
+        Scans CfgMagazines and CfgAmmo once per Arma 3 session and caches:
+        - Base throwable/UGL explosive magazine list
+        - CfgAmmo list & lowercase ammo -> magazine lookup HashMap
+        - Lowercase magazine -> canonical magazine classname HashMap
+        - Precomputed smoke and chemlight/flare exclusion sets
+        Restores missionNamespace variables DGM_var_expArr and DGM_var_ammoCfg for backwards compatibility.
+*/
 
-_ammoCfg = _ammoCfgEnt apply {configName _x};
+private _cache = parsingNamespace getVariable "DGM_expCacheMap";
 
-_expArr append ["MiniGrenade", "1Rnd_HE_Grenade_shell", "HandGrenade"];	
+if (isNil "_cache" || {!(_cache isEqualType createHashMap)}) then {
+    private _expArr = [];
+    private _ammoCfgEnt = "true" configClasses (configFile >> "CfgAmmo");
+    private _magCfgEnt = "true" configClasses (configFile >> "CfgMagazines");
 
-MSVAR ["DGM_var_expArr", _expArr];
-MSVAR ["DGM_var_ammoCfg", _ammoCfg];
+    private _ammoCfg = _ammoCfgEnt apply {configName _x};
+    private _canonicalMag = createHashMap;
+    private _ammoToMag = createHashMap;
+    private _smokeSet = createHashMap;
+    private _chemlightSet = createHashMap;
+
+    private _smokeTokens = ["smoke", "m18", "83", "m8h", "dm32", "nsp", "rdg"];
+
+    {
+        private _cfg = _x;
+        private _magName = configName _cfg;
+        private _lwrMag = toLower _magName;
+        _canonicalMag set [_lwrMag, _magName];
+
+        private _ammoName = getText (_cfg >> "ammo");
+        private _lwrAmmo = toLower _ammoName;
+        if (_lwrAmmo != "" && {!(_lwrAmmo in _ammoToMag)}) then {
+            _ammoToMag set [_lwrAmmo, _magName];
+        };
+
+        // Walk inheritance chain natively (works in XEH_preStart with zero BIS_fnc dependency)
+        private _isGrenOrShell = false;
+        private _parent = _cfg;
+        while {isClass _parent} do {
+            private _pName = configName _parent;
+            if (_pName == "HandGrenade" || {_pName == "1Rnd_HE_Grenade_shell"}) exitWith {
+                _isGrenOrShell = true;
+            };
+            _parent = inheritsFrom _parent;
+        };
+
+        if (_isGrenOrShell) then {
+            _expArr pushBack _magName;
+        };
+
+        // Precompute chemlight / handflare classification (case-insensitive)
+        if (("hemlight" in _lwrMag) || {"handflare" in _lwrMag} || {"hemlight" in _lwrAmmo} || {"flare" in _lwrAmmo && {"flare" in _lwrMag}}) then {
+            _chemlightSet set [_lwrMag, true];
+        };
+
+        // Precompute smoke classification (case-insensitive across mag name, ammo name, and short display name)
+        private _shortNameLwr = toLower (getText (_cfg >> "displayNameShort"));
+        private _isSmoke = ("moke" in _shortNameLwr) || {"дым" in _shortNameLwr} || {"дим" in _shortNameLwr};
+        if !(_isSmoke) then {
+            {
+                if ((_x in _lwrMag) || {_x in _lwrAmmo}) exitWith {
+                    _isSmoke = true;
+                };
+            } forEach _smokeTokens;
+        };
+        if (_isSmoke) then {
+            _smokeSet set [_lwrMag, true];
+        };
+    } forEach _magCfgEnt;
+
+    {
+        if !(_x in _expArr) then {
+            _expArr pushBack _x;
+        };
+    } forEach ["MiniGrenade", "1Rnd_HE_Grenade_shell", "HandGrenade"];
+
+    _expArr = _expArr arrayIntersect _expArr;
+
+    _cache = createHashMap;
+    _cache set ["expArr", _expArr];
+    _cache set ["ammoCfg", _ammoCfg];
+    _cache set ["canonicalMag", _canonicalMag];
+    _cache set ["ammoToMag", _ammoToMag];
+    _cache set ["smokeSet", _smokeSet];
+    _cache set ["chemlightSet", _chemlightSet];
+
+    parsingNamespace setVariable ["DGM_expCacheMap", _cache];
+};
+
+private _expArr = +(_cache get "expArr");
+private _ammoCfg = _cache get "ammoCfg";
+
+if (!isNull missionNamespace) then {
+    missionNamespace setVariable ["DGM_var_expArr", _expArr];
+    missionNamespace setVariable ["DGM_var_ammoCfg", _ammoCfg];
+};
 
 [_expArr, _ammoCfg]

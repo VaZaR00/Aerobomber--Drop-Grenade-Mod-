@@ -1,27 +1,25 @@
 /*
-	Name: DGM_fnc_dropDevice
+    Function: DGM_fnc_dropDevice
 
-	Example: 
-		[this, 1, "rhs_VOG25"] call DGM_fnc_dropDevice;
+    Description:
+        Initializes a grenade drop device on the given drone object (server-side).
+        Safe to call from Eden object init fields (automatically exits on clients).
+
+    Example:
+        [this, 1, "rhs_VOG25"] call DGM_fnc_dropDevice;
 */
 
-#include "defines.h"
+#include "defines.hpp"
 
-if !(isServer) exitWith {};
+if !(isServer) exitWith {false};
 
-FILE_ONLY_SPAWN
+params [
+    ["_drone", objNull]
+];
 
-sleep 0.1;
+if !(IS_OBJ(_drone)) exitWith {false};
+if (IS_DROP_DEVICE(_drone)) exitWith {true};
 
-PR _obj = _this select 0;
+private _initArgs = if (count _this > 1) then {_this select [1]} else {[]};
 
-if ((isNil "_obj") || {!(_obj isEqualType objNull) || {(_obj isEqualTo objNull)}}) exitWith {};
-
-private _dropDevice = _obj getVariable [QPREF(deviceInstance), {}];
-
-if !(_dropDevice isEqualType {}) exitWith {};
-if !(_dropDevice isEqualTo {}) exitWith {};
-
-PR _deviceInstance = NEW(OO_DROP_DEVICE, _this);
-
-_deviceInstance
+[_drone, _initArgs] NEW_OBJINSTANCE_GLOBAL("DropDevice", true)

@@ -1,6 +1,0 @@
-class CfgRemoteExec
-{
-    class Functions
-    {
-    };
-};

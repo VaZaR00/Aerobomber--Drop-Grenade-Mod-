@@ -6,13 +6,14 @@
 
 class CfgFactionClasses
 {
-	class DGM
-	{
-		displayName="$STR_DGM_Module_Device_FactionName";
-		priority=0;
-		side=7;
-	};
+    class DGM
+    {
+        displayName = "$STR_DGM_Module_Device_FactionName";
+        priority = 0;
+        side = 7;
+    };
 };
+
 class ArgumentsBaseUnits;
 class CfgVehicles
 {
@@ -24,19 +25,19 @@ class CfgVehicles
             class AnyBrain;
         };
     };
-    class PREF(Device): Module_F
+
+    class DGM_Device: Module_F
     {
         scope = 2;
+        scopeCurator = 1;
         author = "Vazar";
         displayName = "$STR_DGM_Module_Device_FactionName";
-        category = STR(PREFX);
-        function = SFUNC(initModuleDropDevice);
-        // icon = "a3\weapons_f\data\ui\icon_gl_ca.paa";
-        // portrait = "a3\weapons_f\data\ui\icon_gl_ca.paa";
+        category = "DGM";
+        function = "DGM_fnc_initModuleDropDevice";
         icon = "a3\ui_f\data\gui\rsc\rscdisplayarsenal\cargothrow_ca.paa";
         portrait = "a3\ui_f\data\gui\rsc\rscdisplayarsenal\cargothrow_ca.paa";
         functionPriority = 2;
-        isGlobal = 1;
+        isGlobal = 0;
         isTriggerActivated = 0;
 
         class Arguments: ArgumentsBaseUnits
@@ -84,8 +85,8 @@ class CfgVehicles
                 defaultValue = 0;
                 class values
                 {
-                    class Yes    {name = SSTR(Yes); value = 1;};
-                    class No   {name = SSTR(No); value = 0;};
+                    class Yes {name = SSTR(Yes); value = 1;};
+                    class No  {name = SSTR(No);  value = 0;};
                 };
             };
             class spawnTempGren
@@ -96,8 +97,8 @@ class CfgVehicles
                 defaultValue = 1;
                 class values
                 {
-                    class Yes    {name = SSTR(Yes); value = 1;};
-                    class No   {name = SSTR(No); value = 0;};
+                    class Yes {name = SSTR(Yes); value = 1;};
+                    class No  {name = SSTR(No);  value = 0;};
                 };
             };
             class allowOnlyListed
@@ -105,10 +106,11 @@ class CfgVehicles
                 displayName = SSTR(allowOnlyListed);
                 description = SSTR_DESC(allowOnlyListed);
                 typeName = "NUMBER";
+                defaultValue = 0;
                 class values
                 {
-                    class Yes    {name = SSTR(Yes); value = 1;};
-                    class No   {name = SSTR(No); value = 0;};
+                    class Yes {name = SSTR(Yes); value = 1;};
+                    class No  {name = SSTR(No);  value = 0;};
                 };
             };
             class removeChemlights
@@ -119,8 +121,8 @@ class CfgVehicles
                 defaultValue = 1;
                 class values
                 {
-                    class Yes    {name = SSTR(Yes); value = 1;};
-                    class No   {name = SSTR(No); value = 0;};
+                    class Yes {name = SSTR(Yes); value = 1;};
+                    class No  {name = SSTR(No);  value = 0;};
                 };
             };
             class removeSmokes
@@ -131,14 +133,14 @@ class CfgVehicles
                 defaultValue = 1;
                 class values
                 {
-                    class Yes    {name = SSTR(Yes); value = 1;};
-                    class No   {name = SSTR(No); value = 0;};
+                    class Yes {name = SSTR(Yes); value = 1;};
+                    class No  {name = SSTR(No);  value = 0;};
                 };
             };
         };
     };
-    // Change priority to default module for create diary
-    class ModuleCreateDiaryRecord_F : Module_F
+
+    class ModuleCreateDiaryRecord_F: Module_F
     {
         functionPriority = 5;
     };

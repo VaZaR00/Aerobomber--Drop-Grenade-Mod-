@@ -1,0 +1,2 @@
+#define FUNC_PRE_START 
+#define DO_FUNC_RECOMPILE 

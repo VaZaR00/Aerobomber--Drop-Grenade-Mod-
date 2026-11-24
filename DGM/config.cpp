@@ -1,18 +1,20 @@
-#include "includes\main.h"
+#include "includes\defines.hpp"
 
 class CfgPatches {
-	class PREFX {
-		name = "Aerobomber";
-		author = "Vazar";
-		requiredAddons[] = {
-			"A3_Functions_F",
-			"cba_common"
-		};
-		units[] = {};
-		weapons[] = {};
+    class PREFX {
+        name = "Drone Grenade Mod";
+        author = "Vazar";
+        requiredAddons[] = {
+            "cba_common",
+            "A3_Functions_F"
+        };
+        units[] = {};
+        weapons[] = {};
         skipWhenMissingDependencies = 1;
-	};
+    };
 };
 
-#include "includes\CfgFunctions.hpp"
-#include "includes\CfgRemoteExec.hpp"
+// #include "includes\cfgFunctions.hpp"
+#include "includes\cfgRemoteExec.hpp"
+#include "includes\configIncludes.hpp"
+#include "includes\ExtendedEventHandlers.hpp"

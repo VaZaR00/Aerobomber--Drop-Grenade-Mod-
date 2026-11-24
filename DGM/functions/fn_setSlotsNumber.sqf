@@ -1,14 +1,23 @@
 /*
-	Name: DGM_fnc_setSlotsNumber
+    Function: DGM_fnc_setSlotsNumber
 
-	Example: 
-		[this, 1] call DGM_fnc_setSlotsNumber;
+    Example:
+        [_drone, 2] call DGM_fnc_setSlotsNumber;
 */
 
-#include "defines.h"
+#include "defines.hpp"
 
-params["_drone", "_num"];
+params [["_drone", objNull], ["_num", 1]];
+if !(IS_DROP_DEVICE(_drone)) exitWith {false};
 
-PR _deviceInst = _drone GV [QPREF(deviceInstance), {}];
+if (_num <= 0) exitWith {
+    SHOW_HINT(DGM_STR_SLOTS_NOT_ENOUGH);
+    false
+};
 
-METHOD(_deviceInst, "setSlotsNumber", _num);
+if (isServer) then {
+    ["setSlotsNumber", [_num]] CALL_OBJCLASS("DropDevice", _drone)
+} else {
+    ["DGM_setSlotsNumberServer", [_drone, _num]] call CBA_fnc_serverEvent;
+    true
+}

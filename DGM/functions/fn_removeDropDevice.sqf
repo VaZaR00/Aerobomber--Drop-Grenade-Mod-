@@ -1,16 +1,19 @@
 /*
-	Name: DGM_fnc_removeDropDevice
+    Function: DGM_fnc_removeDropDevice
+
+    Description:
+        Removes the drop device, decorative grenade, event handlers, and all client menus from a drone.
 */
 
-#include "defines.h"
+#include "defines.hpp"
 
-params["_drone"];
+params [["_drone", objNull]];
+if !(IS_OBJ(_drone)) exitWith {false};
+if !(IS_DROP_DEVICE(_drone)) exitWith {false};
 
-// Ensure the function is only executed where the object is local on mission init
-if !(local _drone) exitWith {};
-
-PR _deviceInst = _drone GV [QPREF(deviceInstance), {}];
-
-DELETE(_deviceInst);
-
-true
+if (isServer) then {
+    [] DELETE_OBJCLASS_GLOBAL("DropDevice", _drone, true)
+} else {
+    ["DGM_removeDropDeviceServer", [_drone]] call CBA_fnc_serverEvent;
+    true
+}

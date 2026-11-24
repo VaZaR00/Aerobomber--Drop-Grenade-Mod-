@@ -1,15 +1,21 @@
 /*
-	Name: DGM_fnc_attachGren
+    Function: DGM_fnc_attachGren
 
-	Example: 
-		[_this, "rhs_vog25", 1] call DGM_fnc_attachGren;
+    Description:
+        Programmatically attaches grenades onto a drone (without consuming from a unit's inventory).
+
+    Example:
+        [_drone, "rhs_VOG25", 1] call DGM_fnc_attachGren;
 */
 
-#include "defines.h"
+#include "defines.hpp"
 
-params["_drone", "_grenClass", "_num"];
+params [["_drone", objNull], ["_grenClass", ""], ["_num", 1]];
+if (!IS_DROP_DEVICE(_drone) || {_grenClass isEqualTo ""} || {_num <= 0}) exitWith {0};
 
-PR _deviceInst = _drone GV [QPREF(deviceInstance), {}];
-PR _currentCount = METHOD(_deviceInst, "getGrenAmount", _grenClass);
-
-["DGM_fnc_attachGrenEvent", [_drone, _grenClass, objNull, _num, _currentCount], 0, _drone] call DGM_fnc_event;
+if (isServer) then {
+    ["addGrenade", [_grenClass, _num], 0] CALL_OBJCLASS("DropDevice", _drone)
+} else {
+    ["DGM_requestAttachGren", [_drone, _grenClass, _num, objNull]] call CBA_fnc_serverEvent;
+    _num
+}

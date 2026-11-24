@@ -1,12 +1,17 @@
 /*
-	Name: DGM_fnc_dropGren
+    Function: DGM_fnc_dropGren
 
-	Example: 
-		[_this, "rhs_vog25"] call DGM_fnc_dropGren;
+    Description:
+        Programmatically drops grenades of the given class (or first available class if empty) from a drone.
+
+    Example:
+        [_drone, "rhs_VOG25", 1] call DGM_fnc_dropGren;
 */
 
-#include "defines.h"
+#include "defines.hpp"
 
-params["_drone", "_grenClass", ["_num", 1]];
+params [["_drone", objNull], ["_grenClass", ""], ["_num", 1], ["_instigator", objNull]];
+if (!IS_DROP_DEVICE(_drone) || {_num <= 0}) exitWith {false};
 
-["DGM_fnc_dropGrenEvent", [_drone, _grenClass, _num, objNull, 0], 0, _drone] call DGM_fnc_event;
+["DGM_requestDropGren", [_drone, _grenClass, _num, _instigator]] call CBA_fnc_serverEvent;
+true

@@ -1,20 +1,28 @@
-#include "includes\defines.h"
-#include "includes\main.h"
+#include "includes\defines.hpp"
 
 class CfgPatches {
-	class ADDON_NAME {
-		name = "DGM Modules";
-		author = "Vazar";
-		requiredAddons[] = {
-			"A3_Functions_F",
-			"cba_common"
-		};
-		units[] = {};
-		weapons[] = {};
+    class PREFX {
+        name = "DGM Modules";
+        author = "Vazar";
+        requiredAddons[] = {
+            "cba_common",
+            "A3_Functions_F",
+#ifdef FINAL
+            "DGM"
+#endif
+        };
+        units[] = {
+            "DGM_Device"
+        };
+        weapons[] = {};
         skipWhenMissingDependencies = 1;
-	};
+    };
 };
 
+#ifdef FINAL
 #include "includes\CfgFunctions.hpp"
+#include "includes\ExtendedEventHandlers.hpp"
+#endif
+
 #include "includes\CfgRemoteExec.hpp"
-#include "includes\CfgModules.hpp"
+#include "includes\configIncludes.hpp"

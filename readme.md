@@ -1,73 +1,68 @@
 # DGM - Drone Grenade Mod
 
-DGM (Drone Grenade Mod) is an Arma 3 scripting system that enables drones to carry, attach, detach, and drop grenades or other compatible items.
+DGM (Drone Grenade Mod) is an Arma 3 addon and scripting system that enables drones to carry, attach, detach, and drop grenades or other compatible ordnance.
 
 Steam: https://steamcommunity.com/sharedfiles/filedetails/?id=3144481988
 
 ## Features
 
-- Attach, detach, and drop grenades from drones via in-game Actions Menu.
-- Supports multiple grenade types and custom item whitelists/blacklists.
-- Handles multiplayer synchronization and remote execution (Multiplayer compitable).
-- Highly configurable via script parameters and mission attributes.
-- Localized stringtable for multi-language support.
-
+- Attach, detach, and drop grenades from drones via the in-game Action Menu or configurable CBA Keybinds.
+- Supports multiple grenade types simultaneously, salvo drop **Charge**, and custom item whitelists/blacklists (accepts both `CfgMagazines` and `CfgAmmo` classnames).
+- Server-authoritative multiplayer synchronization over CBA Events (zero `remoteExec` / `CfgRemoteExec`, automatic JIP cleanup).
+- Configurable via Eden `DGM_Device` module, **Zeus Enhanced (ZEN)** custom modules, CBA Settings, and SQF API functions.
+- Localized in English, Ukrainian, and Russian.
 
 ## Usage
 
-# Add Drop device
+### Eden & Zeus Modules
 
-Call DGM_fnc_dropDevice on drone with parameters:
-- **` drone`** `(Object)`  
-    The drone object to which the drop device system will be attached.
+- **Eden Editor:** Place **Systems (F5) -> DGM -> Grenade Drop Device** and sync it to one or more drones (or specify variable names in the `Drone` attribute).
+- **Zeus (with ZEN):** Under **DGM - Drone Grenade Mod**, use **Grenade Drop Device** (click on a drone to configure and attach) or **Remove Drop Device**.
 
-- **` slotNum`** `(Number, default: 1)`  
-    Number of grenade/item slots available on the drone.
+### SQF API
 
-- **` spawnWithGren`** `(String, default: "HandGrenade")`  
-    If not empty, the drone will spawn with gren class (first) already attached.
+#### Add Drop Device (`DGM_fnc_dropDevice`)
 
-- **` addedItems`** `(String, default: "")`  
-    List of allowed grenade/item classnames, separated by `;`, `,`, `:`, or space.
+```sqf
+[
+    _drone,            // Object: target drone
+    _slotNum,          // Number (default: 1): number of grenade slots
+    _spawnWithGren,    // String (default: "HandGrenade"): initial grenade class (and custom list)
+    _addedItems,       // String (default: ""): extra allowed classnames (; , : or space separated)
+    _removedItems,     // String (default: ""): restricted classnames (; , : or space separated)
+    _allowSetCharge,   // Boolean (default: false): allow operator to change simultaneous drop Charge
+    _spawnTempGren,    // Boolean (default: true): attach decorative 3D grenade model under drone
+    _allowOnlyListed,  // Boolean (default: false): restrict allowed grenades to custom/added lists only
+    _removeChemlights, // Boolean (default: true): exclude chemlights and hand flares
+    _removeSmokes      // Boolean (default: true): exclude smoke grenades
+] call DGM_fnc_dropDevice;
+```
 
-- **` removedItems`** `(String, default: "")`  
-    List of restricted grenade/item classnames, separated by `;`, `,`, `:`, or space.
+Example:
+```sqf
+[this, 2, "rhs_VOG25", "", "", true] call DGM_fnc_dropDevice;
+```
 
-- **` spawnTempGren`** `(Boolean, default: true)`  
-    If true, a decorative (visual) grenade object will be spawned and attached to the drone.
+#### Other Functions
 
-- **` allowOnlyListed`** `(Boolean, default: false)`  
-    If true, only items listed in Custom list can be attached to the drone.
+- `[_drone] call DGM_fnc_removeDropDevice;` — Removes the Drop Device, decorative grenade, and client menus from `_drone`.
+- `[_drone, _slotNum] call DGM_fnc_setSlotsNumber;` — Updates maximum grenade slots on `_drone`.
+- `[_drone, _allow] call DGM_fnc_allowSetCharge;` — Enables or disables simultaneous drop Charge selection on `_drone`.
+- `[_drone, _grenClass, _num] call DGM_fnc_attachGren;` — Programmatically loads grenades onto `_drone`.
+- `[_drone, _grenClass, _num, _instigator] call DGM_fnc_dropGren;` — Programmatically drops grenades from `_drone`.
 
-- **` removeChemlights`** `(Boolean, default: true)`  
-    If true, chemlights and flares will be excluded from the allowed items.
+### Default Keybinds (CBA Controls -> DGM)
 
-- **` removeSmokes`** `(Boolean, default: true)`  
-    If true, smoke grenades will be excluded from the allowed items.
-
-Example: 
-    [this, 1, "rhs_VOG25"] call DGM_fnc_dropDevice;
-
-# Remove Drop device
-
-Call DGM_fnc_removeDropDevice on drone:
-- **` drone`** `(Object)`  
-    The drone object on which you want to remove Drop Device.
-
-# Set custom Drop device slots number
-
-Call DGM_fnc_setSlotsNumber on drone:
-- **` drone`** `(Object)`  
-    The drone object on which you want to remove Drop Device.
-
-- **` slotNum`** `(Number, default: 1)`  
-    Number of grenade/item slots available on the drone.
-
+- **Drop Grenade:** `Alt + G`
+- **Cycle Drop Charge:** `Alt + C`
+- **Switch Active Grenade Type:** `Alt + B`
+- **Toggle Drop Device Menu:** *(unbound by default)*
 
 ## Dependencies
 
-- [CBA_A3](https://github.com/CBATeam/CBA_A3) (for macros and event handling)
-- Arma 3 v2.00 or later
+- [CBA_A3](https://github.com/CBATeam/CBA_A3) (`cba_common`)
+- Arma 3 v2.10 or later
+- *(Optional)* [Zeus Enhanced (ZEN)](https://github.com/zen-mod/ZEN) for Zeus custom modules
 
 ## Credits
 
