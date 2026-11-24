@@ -354,7 +354,7 @@ CLASS("OO_DROP_DEVICE") // IOO_DROP_DEVICE
         
 
         if ("mavik" in (typeOf _drone)) then {
-            [missionNamespace, "DB_mavic_showMessage", []] call BIS_fnc_callScriptedEventHandler;
+            [missionNamespace, "DB_mavic_showMessage", _drone] call BIS_fnc_callScriptedEventHandler;
         };
 
         PR _droneVelocity = velocity _drone;
