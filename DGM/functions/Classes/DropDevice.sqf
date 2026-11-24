@@ -401,7 +401,7 @@ PUBLIC GLOBAL SINGLETON_CLASS(DropDevice)
         if (_itemAmmo isEqualTo "") exitWith {objNull};
 
         if ("mavik" in (toLower (typeOf _drone))) then {
-            [missionNamespace, "DB_mavic_showMessage", _drone] call BIS_fnc_callScriptedEventHandler;
+            [missionNamespace, "DB_mavic_showMessage", [_drone]] call BIS_fnc_callScriptedEventHandler;
         };
 
         private _droneVelocity = velocity _drone;

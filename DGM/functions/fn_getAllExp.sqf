@@ -96,9 +96,7 @@ if (isNil "_cache" || {!(_cache isEqualType createHashMap)}) then {
 private _expArr = +(_cache get "expArr");
 private _ammoCfg = _cache get "ammoCfg";
 
-if (!isNull missionNamespace) then {
-    missionNamespace setVariable ["DGM_var_expArr", _expArr];
-    missionNamespace setVariable ["DGM_var_ammoCfg", _ammoCfg];
-};
+missionNamespace setVariable ["DGM_var_expArr", _expArr];
+missionNamespace setVariable ["DGM_var_ammoCfg", _ammoCfg];
 
 [_expArr, _ammoCfg]
